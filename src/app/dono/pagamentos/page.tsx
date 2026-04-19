@@ -10,12 +10,7 @@ interface StoredOrder {
   orderId: string;
   customer: OrderCustomer;
   totalValue: number;
-  status:
-    | "novo"
-    | "em_preparo"
-    | "saiu_para_entrega"
-    | "finalizado"
-    | "cancelado";
+  status: "received" | "preparing" | "delivering" | "completed";
   createdAt: string;
 }
 
@@ -50,7 +45,7 @@ export default function OwnerPaymentsPage() {
 
   const summary = useMemo(() => {
     const today = new Date().toDateString();
-    const finished = orders.filter((order) => order.status === "finalizado");
+    const finished = orders.filter((order) => order.status === "completed");
 
     const byMethod = new Map<string, number>();
     for (const order of finished) {
@@ -67,10 +62,7 @@ export default function OwnerPaymentsPage() {
       0,
     );
     const toReceive = orders
-      .filter(
-        (order) =>
-          order.status !== "finalizado" && order.status !== "cancelado",
-      )
+      .filter((order) => order.status !== "completed")
       .reduce((sum, order) => sum + order.totalValue, 0);
 
     return {
@@ -89,15 +81,15 @@ export default function OwnerPaymentsPage() {
       </header>
 
       <div className="owner-metrics-grid">
-        <article className="owner-metric-card owner-metric-green">
+        <article className="owner-metric-card owner-metric-d">
           <p>Recebido hoje</p>
           <strong>R$ {summary.receivedToday.toFixed(2)}</strong>
         </article>
-        <article className="owner-metric-card owner-metric-cyan">
+        <article className="owner-metric-card owner-metric-a">
           <p>Recebido total</p>
           <strong>R$ {summary.receivedTotal.toFixed(2)}</strong>
         </article>
-        <article className="owner-metric-card owner-metric-amber">
+        <article className="owner-metric-card owner-metric-e">
           <p>A receber</p>
           <strong>R$ {summary.toReceive.toFixed(2)}</strong>
         </article>

@@ -1,9 +1,10 @@
+import { kvGet, kvSet } from "./kv-store";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { Pool } from "pg";
 
 export interface OrderItem {
-  id: number;
+  id: string;
   name: string;
   price: number;
   quantity: number;
@@ -17,12 +18,7 @@ export interface OrderCustomer {
   notes?: string;
 }
 
-export type OrderStatus =
-  | "novo"
-  | "em_preparo"
-  | "saiu_para_entrega"
-  | "finalizado"
-  | "cancelado";
+export type OrderStatus = "received" | "preparing" | "delivering" | "completed";
 
 export interface StoredOrder {
   orderId: string;
@@ -34,9 +30,10 @@ export interface StoredOrder {
 }
 
 const MAX_ORDERS = 200;
+const KV_ORDERS_KEY = "altas-horas:orders";
 const dataFilePath =
   process.env.ORDERS_DATA_FILE ??
-  path.join(/* turbopackIgnore: true */ process.cwd(), ".data", "orders.json");
+  path.join(/*turbopackIgnore: true*/ process.cwd(), ".data", "orders.json");
 const databaseUrl = process.env.DATABASE_URL;
 
 let ordersStoreCache: StoredOrder[] | null = null;
@@ -52,13 +49,25 @@ if (pool && !globalPool.__ordersPool) {
   globalPool.__ordersPool = pool;
 }
 
+const normalizeStatus = (status: string): OrderStatus => {
+  const normalized = String(status).toLowerCase().trim();
+  if (normalized === "novo" || normalized === "received") return "received";
+  if (normalized === "em_preparo" || normalized === "preparing")
+    return "preparing";
+  if (normalized === "saiu_para_entrega" || normalized === "delivering")
+    return "delivering";
+  if (normalized === "finalizado" || normalized === "completed")
+    return "completed";
+  return "received";
+};
+
 const mapRowToOrder = (row: {
   order_id: string;
   created_at: string | Date;
   customer: OrderCustomer;
   items: OrderItem[];
   total_value: number | string;
-  status: OrderStatus;
+  status: string;
 }): StoredOrder => {
   return {
     orderId: row.order_id,
@@ -69,7 +78,7 @@ const mapRowToOrder = (row: {
     customer: row.customer,
     items: row.items,
     totalValue: Number(row.total_value),
-    status: row.status,
+    status: normalizeStatus(row.status),
   };
 };
 
@@ -95,10 +104,59 @@ const ensureLoaded = async (): Promise<StoredOrder[]> => {
     return ordersStoreCache;
   }
 
+  // 1. Tenta Vercel KV
+  try {
+    const kvOrders = await kvGet<StoredOrder[]>(KV_ORDERS_KEY);
+    if (kvOrders && Array.isArray(kvOrders)) {
+      ordersStoreCache = kvOrders.map((item) => ({
+        ...item,
+        status: normalizeStatus(String(item?.status ?? "")),
+      }));
+      return ordersStoreCache;
+    }
+  } catch (error) {
+    console.warn("Erro ao carregar de KV:", error);
+  }
+
+  // 2. Tenta Postgres
+  if (pool) {
+    try {
+      await ensureDb();
+      const result = await pool.query<{
+        order_id: string;
+        created_at: string | Date;
+        customer: OrderCustomer;
+        items: OrderItem[];
+        total_value: number | string;
+        status: string;
+      }>(
+        `
+          SELECT order_id, created_at, customer, items, total_value, status
+          FROM orders
+          ORDER BY created_at DESC
+          LIMIT $1
+        `,
+        [MAX_ORDERS],
+      );
+
+      ordersStoreCache = result.rows.map(mapRowToOrder);
+      return ordersStoreCache;
+    } catch (error) {
+      console.warn("Erro ao carregar de Postgres:", error);
+    }
+  }
+
+  // 3. Tenta arquivo local
   try {
     const fileContent = await fs.readFile(dataFilePath, "utf-8");
     const parsed = JSON.parse(fileContent);
-    ordersStoreCache = Array.isArray(parsed) ? parsed : [];
+    ordersStoreCache = Array.isArray(parsed)
+      ? parsed.map((item) => ({
+          ...item,
+          status: normalizeStatus(String(item?.status ?? "")),
+        }))
+      : [];
+    return ordersStoreCache;
   } catch {
     ordersStoreCache = [];
   }
@@ -106,18 +164,55 @@ const ensureLoaded = async (): Promise<StoredOrder[]> => {
   return ordersStoreCache;
 };
 
-const persist = async (orders: StoredOrder[]) => {
+const persistToEverywhere = async (orders: StoredOrder[]) => {
+  ordersStoreCache = orders;
+
+  // 1. Salva em KV
+  try {
+    await kvSet(KV_ORDERS_KEY, orders.slice(0, MAX_ORDERS));
+  } catch (error) {
+    console.warn("Erro ao salvar em KV:", error);
+  }
+
+  // 2. Salva em Postgres
+  if (pool) {
+    try {
+      await ensureDb();
+      // Limpa e reinsere
+      await pool.query(`DELETE FROM orders`);
+      for (const order of orders.slice(0, MAX_ORDERS)) {
+        await pool.query(
+          `
+            INSERT INTO orders (order_id, created_at, customer, items, total_value, status)
+            VALUES ($1, $2, $3::jsonb, $4::jsonb, $5, $6)
+          `,
+          [
+            order.orderId,
+            order.createdAt,
+            JSON.stringify(order.customer),
+            JSON.stringify(order.items),
+            order.totalValue,
+            order.status,
+          ],
+        );
+      }
+    } catch (error) {
+      console.warn("Erro ao salvar em Postgres:", error);
+    }
+  }
+
+  // 3. Salva em arquivo
   writeQueue = writeQueue
     .then(async () => {
       try {
         await fs.mkdir(path.dirname(dataFilePath), { recursive: true });
         await fs.writeFile(
           dataFilePath,
-          JSON.stringify(orders, null, 2),
+          JSON.stringify(orders.slice(0, MAX_ORDERS), null, 2),
           "utf-8",
         );
       } catch {
-        // Se não houver permissão de escrita no ambiente, mantém em memória.
+        // Sem permissão de escrita, continua
       }
     })
     .catch(() => undefined);
@@ -126,97 +221,26 @@ const persist = async (orders: StoredOrder[]) => {
 };
 
 export const addOrder = async (order: StoredOrder) => {
-  if (pool) {
-    await ensureDb();
-    await pool.query(
-      `
-        INSERT INTO orders (order_id, created_at, customer, items, total_value, status)
-        VALUES ($1, $2, $3::jsonb, $4::jsonb, $5, $6)
-        ON CONFLICT (order_id) DO NOTHING
-      `,
-      [
-        order.orderId,
-        order.createdAt,
-        JSON.stringify(order.customer),
-        JSON.stringify(order.items),
-        order.totalValue,
-        order.status,
-      ],
-    );
-    return;
-  }
-
   const orders = await ensureLoaded();
-
   orders.unshift(order);
-
-  if (orders.length > MAX_ORDERS) {
-    orders.splice(MAX_ORDERS);
-  }
-
-  await persist(orders);
+  await persistToEverywhere(orders);
 };
 
 export const listOrders = async (): Promise<StoredOrder[]> => {
-  if (pool) {
-    await ensureDb();
-    const result = await pool.query<{
-      order_id: string;
-      created_at: string | Date;
-      customer: OrderCustomer;
-      items: OrderItem[];
-      total_value: number | string;
-      status: OrderStatus;
-    }>(
-      `
-        SELECT order_id, created_at, customer, items, total_value, status
-        FROM orders
-        ORDER BY created_at DESC
-        LIMIT $1
-      `,
-      [MAX_ORDERS],
-    );
-
-    return result.rows.map(mapRowToOrder);
-  }
-
-  const orders = await ensureLoaded();
-  return [...orders];
+  return ensureLoaded();
 };
 
 export const updateOrderStatus = async (
   orderId: string,
   status: OrderStatus,
 ): Promise<StoredOrder | null> => {
-  if (pool) {
-    await ensureDb();
-    const result = await pool.query<{
-      order_id: string;
-      created_at: string | Date;
-      customer: OrderCustomer;
-      items: OrderItem[];
-      total_value: number | string;
-      status: OrderStatus;
-    }>(
-      `
-        UPDATE orders
-        SET status = $2
-        WHERE order_id = $1
-        RETURNING order_id, created_at, customer, items, total_value, status
-      `,
-      [orderId, status],
-    );
-
-    if (result.rows.length === 0) return null;
-    return mapRowToOrder(result.rows[0]);
-  }
-
   const orders = await ensureLoaded();
-  const order = orders.find((item) => item.orderId === orderId);
+  const order = orders.find((o) => o.orderId === orderId);
+
   if (!order) return null;
 
-  order.status = status;
+  order.status = normalizeStatus(status);
+  await persistToEverywhere(orders);
 
-  await persist(orders);
   return order;
 };

@@ -46,7 +46,7 @@ const MenuItems = ({
             </p>
             <button
               onClick={() => addToCart(id)}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-[#0f766e] px-3 py-2 text-sm font-bold text-white shadow-sm hover:bg-[#0a5f59]"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-yellow-500 px-3 py-2 text-sm font-bold text-black shadow-sm hover:bg-yellow-400"
               aria-label={`Adicionar ${name} ao carrinho`}
             >
               <IconPlus size={16} stroke={2} />

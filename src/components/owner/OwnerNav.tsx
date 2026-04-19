@@ -16,7 +16,7 @@ const navItems = [
   { href: "/dono/clientes", label: "Clientes", icon: IconUsers },
   { href: "/dono/pedidos", label: "Pedidos", icon: IconShoppingCart },
   { href: "/dono/pagamentos", label: "Pagamentos", icon: IconCreditCard },
-  { href: "/dono/usuarios", label: "Usuarios", icon: IconPackage },
+  { href: "/dono/usuarios", label: "Produtos", icon: IconPackage },
 ];
 
 export default function OwnerNav() {

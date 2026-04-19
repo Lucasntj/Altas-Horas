@@ -1,5 +1,9 @@
 import type { Metadata } from "next";
 import { Bebas_Neue, Manrope } from "next/font/google";
+import { CartProvider } from "@/context/CartContext";
+import CartSidebar from "@/components/cart/CartSidebar";
+import Toaster from "@/components/ui/Toaster";
+import FloatingWhatsAppButton from "@/components/ui/FloatingWhatsAppButton";
 import "./globals.css";
 
 const displayFont = Bebas_Neue({
@@ -14,8 +18,8 @@ const bodyFont = Manrope({
 });
 
 export const metadata: Metadata = {
-  title: "Altas Horas | Cardapio e Pedidos",
-  description: "Lanchonete Altas Horas: cardapio, carrinho e pedidos online.",
+  title: "Altas Horas | Cardápio e Pedidos",
+  description: "Lanchonete Altas Horas: cardápio, carrinho e pedidos online.",
 };
 
 export default function RootLayout({
@@ -26,7 +30,12 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <body className={`${displayFont.variable} ${bodyFont.variable}`}>
-        {children}
+        <CartProvider>
+          {children}
+          <CartSidebar />
+          <Toaster />
+          <FloatingWhatsAppButton />
+        </CartProvider>
       </body>
     </html>
   );

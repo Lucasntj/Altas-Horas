@@ -3,29 +3,24 @@
 @tailwind utilities;
 
 :root {
-  --color-bg: #fff9f2;
-  --color-bg-alt: #ffe7cc;
-  --color-surface: #ffffff;
-  --color-ink: #1e2126;
-  --color-muted: #646b75;
-  --color-brand: #ed5d1f;
-  --color-brand-dark: #cc4210;
-  --color-accent: #0f766e;
-  --color-border: #ecd8c0;
-  --shadow-soft: 0 10px 30px rgba(38, 22, 9, 0.12);
-  --shadow-strong: 0 24px 60px rgba(38, 22, 9, 0.24);
+  --color-bg: #0d0d0d;
+  --color-bg-alt: #111111;
+  --color-surface: #1a1a1a;
+  --color-surface-alt: #222222;
+  --color-ink: #fafaf9;
+  --color-muted: #a8a29e;
+  --color-brand: #eab308;
+  --color-brand-dark: #ca8a04;
+  --color-accent: #facc15;
+  --color-border: rgba(234, 179, 8, 0.22);
+  --color-border-subtle: rgba(255, 255, 255, 0.08);
+  --shadow-soft: 0 4px 24px rgba(0, 0, 0, 0.5);
+  --shadow-strong: 0 12px 48px rgba(0, 0, 0, 0.7);
 }
 
 body {
   color: var(--color-ink);
-  background:
-    radial-gradient(circle at 5% 10%, rgba(237, 93, 31, 0.16), transparent 26%),
-    radial-gradient(
-      circle at 95% 0%,
-      rgba(15, 118, 110, 0.14),
-      transparent 28%
-    ),
-    linear-gradient(180deg, var(--color-bg) 0%, var(--color-bg-alt) 100%);
+  background: #111111;
   font-family: var(--font-body), "Segoe UI", sans-serif;
   min-height: 100vh;
 }
@@ -52,10 +47,10 @@ textarea {
 @keyframes soft-pulse {
   0%,
   100% {
-    box-shadow: 0 0 0 0 rgba(237, 93, 31, 0.28);
+    box-shadow: 0 0 0 0 rgba(234, 179, 8, 0.26);
   }
   50% {
-    box-shadow: 0 0 0 14px rgba(237, 93, 31, 0);
+    box-shadow: 0 0 0 14px rgba(234, 179, 8, 0);
   }
 }
 
@@ -73,42 +68,67 @@ textarea {
   }
 
   .surface-panel {
-    background: linear-gradient(180deg, #ffffff 0%, #fff6ec 100%);
+    background: var(--color-surface);
     border: 1px solid var(--color-border);
     box-shadow: var(--shadow-soft);
     @apply rounded-2xl;
   }
 
   .field-base {
-    @apply border rounded-xl px-3 py-2.5 outline-none;
-    border-color: #d7c0a5;
-    background: #fffefc;
+    @apply border rounded-xl px-3 py-2.5 outline-none w-full text-sm;
+    border-color: rgba(234, 179, 8, 0.35);
+    background: #0d0d0d;
+    color: var(--color-ink);
   }
 
   .field-base:focus {
     border-color: var(--color-brand);
-    box-shadow: 0 0 0 3px rgba(237, 93, 31, 0.15);
+    box-shadow: 0 0 0 3px rgba(234, 179, 8, 0.2);
+  }
+
+  /* Scrollbar personalizada */
+  .scrollbar-none {
+    scrollbar-width: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
   }
 
   .owner-app {
     @apply min-h-screen;
     background:
-      radial-gradient(circle at 0% 0%, rgba(35, 106, 255, 0.24), transparent 28%),
-      radial-gradient(circle at 100% 0%, rgba(0, 228, 255, 0.14), transparent 33%),
-      linear-gradient(180deg, #041126 0%, #030b1d 100%);
-    color: #e6eef8;
+      radial-gradient(
+        circle at 0% 0%,
+        rgba(234, 179, 8, 0.16),
+        transparent 28%
+      ),
+      radial-gradient(
+        circle at 100% 0%,
+        rgba(250, 204, 21, 0.1),
+        transparent 33%
+      ),
+      linear-gradient(180deg, #0b0b0b 0%, #060606 100%);
+    color: #fefce8;
   }
 
   .owner-sidebar {
     @apply fixed left-0 top-0 h-screen w-[250px] p-3 flex flex-col;
-    background: linear-gradient(180deg, rgba(8, 21, 45, 0.98) 0%, rgba(4, 12, 27, 0.98) 100%);
-    border-right: 1px solid rgba(91, 122, 170, 0.25);
+    background: linear-gradient(
+      180deg,
+      rgba(8, 8, 8, 0.98) 0%,
+      rgba(3, 3, 3, 0.98) 100%
+    );
+    border-right: 1px solid rgba(234, 179, 8, 0.22);
   }
 
   .owner-brand {
     @apply rounded-2xl p-4;
-    background: linear-gradient(135deg, rgba(25, 106, 187, 0.28), rgba(15, 30, 64, 0.8));
-    border: 1px solid rgba(84, 149, 231, 0.45);
+    background: linear-gradient(
+      135deg,
+      rgba(234, 179, 8, 0.2),
+      rgba(32, 32, 32, 0.85)
+    );
+    border: 1px solid rgba(234, 179, 8, 0.45);
   }
 
   .owner-brand-title {
@@ -116,18 +136,19 @@ textarea {
   }
 
   .owner-brand-subtitle {
-    @apply text-xs text-sky-200/90 mt-1;
+    @apply text-xs text-yellow-200/90 mt-1;
   }
 
   .owner-user-card {
     @apply mt-4 rounded-2xl p-3 flex items-center gap-3;
-    background: rgba(19, 34, 63, 0.9);
-    border: 1px solid rgba(91, 122, 170, 0.35);
+    background: rgba(25, 25, 25, 0.9);
+    border: 1px solid rgba(234, 179, 8, 0.22);
   }
 
   .owner-user-avatar {
     @apply w-10 h-10 rounded-full flex items-center justify-center font-bold;
-    background: linear-gradient(135deg, #38bdf8, #2563eb);
+    background: linear-gradient(135deg, #eab308, #ca8a04);
+    color: #111111;
   }
 
   .owner-user-name {
@@ -135,7 +156,7 @@ textarea {
   }
 
   .owner-user-role {
-    @apply text-xs text-slate-300;
+    @apply text-xs text-zinc-300;
   }
 
   .owner-nav-list {
@@ -143,25 +164,33 @@ textarea {
   }
 
   .owner-nav-item {
-    @apply rounded-xl px-3 py-2.5 flex items-center gap-2.5 text-sm font-semibold text-slate-300;
+    @apply rounded-xl px-3 py-2.5 flex items-center gap-2.5 text-sm font-semibold text-zinc-300;
     border: 1px solid transparent;
   }
 
   .owner-nav-item:hover {
     @apply text-white;
-    background: rgba(39, 73, 123, 0.4);
+    background: rgba(234, 179, 8, 0.12);
   }
 
   .owner-nav-item.is-active {
-    background: linear-gradient(90deg, rgba(37, 99, 235, 0.35), rgba(56, 189, 248, 0.22));
-    border-color: rgba(95, 158, 242, 0.5);
-    color: #fff;
+    background: linear-gradient(
+      90deg,
+      rgba(234, 179, 8, 0.35),
+      rgba(250, 204, 21, 0.2)
+    );
+    border-color: rgba(234, 179, 8, 0.55);
+    color: #fefce8;
   }
 
   .owner-logout-btn {
-    @apply mt-auto rounded-xl px-3 py-2.5 flex items-center gap-2 text-sm font-semibold text-rose-100;
-    background: linear-gradient(90deg, rgba(127, 29, 29, 0.5), rgba(76, 5, 25, 0.5));
-    border: 1px solid rgba(244, 114, 182, 0.28);
+    @apply mt-auto rounded-xl px-3 py-2.5 flex items-center gap-2 text-sm font-semibold text-yellow-100;
+    background: linear-gradient(
+      90deg,
+      rgba(87, 64, 0, 0.55),
+      rgba(61, 42, 0, 0.55)
+    );
+    border: 1px solid rgba(234, 179, 8, 0.32);
   }
 
   .owner-content-wrap {
@@ -178,9 +207,13 @@ textarea {
 
   .owner-hero {
     @apply rounded-3xl p-6;
-    background: linear-gradient(90deg, rgba(7, 30, 60, 0.92), rgba(10, 58, 88, 0.78));
-    border: 1px solid rgba(74, 159, 226, 0.35);
-    box-shadow: 0 18px 40px rgba(5, 13, 35, 0.32);
+    background: linear-gradient(
+      90deg,
+      rgba(24, 24, 24, 0.95),
+      rgba(10, 10, 10, 0.9)
+    );
+    border: 1px solid rgba(234, 179, 8, 0.28);
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
   }
 
   .owner-hero h1 {
@@ -188,13 +221,17 @@ textarea {
   }
 
   .owner-hero p {
-    @apply mt-2 text-slate-300 font-medium;
+    @apply mt-2 text-zinc-300 font-medium;
   }
 
   .owner-panel {
     @apply rounded-3xl p-5;
-    background: linear-gradient(180deg, rgba(16, 35, 65, 0.92), rgba(10, 21, 43, 0.95));
-    border: 1px solid rgba(79, 124, 194, 0.32);
+    background: linear-gradient(
+      180deg,
+      rgba(19, 19, 19, 0.95),
+      rgba(9, 9, 9, 0.98)
+    );
+    border: 1px solid rgba(234, 179, 8, 0.24);
   }
 
   .owner-panel-title {
@@ -207,15 +244,15 @@ textarea {
 
   .owner-input {
     @apply rounded-xl px-4 py-2.5 text-sm font-medium min-w-[280px] max-w-full;
-    border: 1px solid rgba(83, 130, 204, 0.45);
-    background: rgba(2, 13, 35, 0.8);
-    color: #e7f1ff;
+    border: 1px solid rgba(234, 179, 8, 0.3);
+    background: rgba(7, 7, 7, 0.9);
+    color: #f8fafc;
   }
 
   .owner-input:focus {
     outline: none;
-    border-color: rgba(56, 189, 248, 0.9);
-    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.18);
+    border-color: rgba(234, 179, 8, 0.9);
+    box-shadow: 0 0 0 3px rgba(234, 179, 8, 0.18);
   }
 
   .owner-card-grid {
@@ -224,8 +261,12 @@ textarea {
 
   .owner-data-card {
     @apply rounded-2xl p-4;
-    background: linear-gradient(135deg, rgba(13, 53, 84, 0.65), rgba(20, 28, 54, 0.65));
-    border: 1px solid rgba(78, 141, 218, 0.35);
+    background: linear-gradient(
+      135deg,
+      rgba(32, 32, 32, 0.7),
+      rgba(16, 16, 16, 0.75)
+    );
+    border: 1px solid rgba(234, 179, 8, 0.26);
   }
 
   .owner-data-card h3 {
@@ -233,13 +274,13 @@ textarea {
   }
 
   .owner-data-card p {
-    @apply text-sm text-slate-200 mt-1;
+    @apply text-sm text-zinc-200 mt-1;
   }
 
   .owner-empty {
-    @apply rounded-2xl p-6 text-center text-slate-300 font-semibold col-span-full;
-    border: 1px dashed rgba(96, 165, 250, 0.55);
-    background: rgba(15, 29, 54, 0.6);
+    @apply rounded-2xl p-6 text-center text-zinc-300 font-semibold col-span-full;
+    border: 1px dashed rgba(234, 179, 8, 0.55);
+    background: rgba(19, 19, 19, 0.7);
   }
 
   .owner-metrics-grid {
@@ -248,44 +289,48 @@ textarea {
 
   .owner-metric-card {
     @apply rounded-2xl p-4;
-    border: 1px solid rgba(122, 173, 255, 0.28);
-    background: linear-gradient(180deg, rgba(6, 25, 47, 0.85), rgba(10, 28, 57, 0.9));
+    border: 1px solid rgba(234, 179, 8, 0.26);
+    background: linear-gradient(
+      180deg,
+      rgba(23, 23, 23, 0.88),
+      rgba(10, 10, 10, 0.92)
+    );
   }
 
   .owner-metric-card p {
-    @apply text-sm text-slate-300 font-semibold;
+    @apply text-sm text-zinc-300 font-semibold;
   }
 
   .owner-metric-card strong {
     @apply mt-2 block text-4xl font-black;
   }
 
-  .owner-metric-cyan strong {
-    @apply text-cyan-300;
+  .owner-metric-a strong {
+    @apply text-yellow-300;
   }
 
-  .owner-metric-blue strong {
-    @apply text-sky-300;
+  .owner-metric-b strong {
+    @apply text-yellow-200;
   }
 
-  .owner-metric-purple strong {
-    @apply text-violet-300;
+  .owner-metric-c strong {
+    @apply text-yellow-400;
   }
 
-  .owner-metric-green strong {
-    @apply text-emerald-300;
+  .owner-metric-d strong {
+    @apply text-yellow-300;
   }
 
-  .owner-metric-amber strong {
-    @apply text-amber-300;
+  .owner-metric-e strong {
+    @apply text-yellow-300;
   }
 
-  .owner-metric-indigo strong {
-    @apply text-indigo-300;
+  .owner-metric-f strong {
+    @apply text-yellow-200;
   }
 
-  .owner-metric-pink strong {
-    @apply text-fuchsia-300;
+  .owner-metric-g strong {
+    @apply text-yellow-100;
   }
 
   @media (max-width: 960px) {

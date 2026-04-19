@@ -39,11 +39,13 @@ const isAuthorized = (request: NextRequest): boolean => {
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  const isOwnerRoute = pathname.startsWith("/dono/");
+  const isOwnerRoute = pathname === "/dono" || pathname.startsWith("/dono/");
   const isOrdersManagement =
     pathname === "/api/orders" && request.method !== "POST";
+  const isProductsManagement =
+    pathname === "/api/products" && request.method !== "GET";
 
-  if (!isOwnerRoute && !isOrdersManagement) {
+  if (!isOwnerRoute && !isOrdersManagement && !isProductsManagement) {
     return NextResponse.next();
   }
 
@@ -55,5 +57,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dono/:path*", "/api/orders"],
+  matcher: ["/dono/:path*", "/api/orders", "/api/products"],
 };

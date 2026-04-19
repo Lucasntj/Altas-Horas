@@ -16,7 +16,7 @@ const CartButton = ({ itemCount }: ItemCountProps) => {
         <IconShoppingCartHeart size={28} stroke={2.1} />
         <span className="text-sm font-bold tracking-wide">Carrinho</span>
 
-        <div className="absolute -top-2 -right-2 flex h-7 min-w-7 items-center justify-center rounded-full border-2 border-[#fff4ea] bg-[#0f766e] px-1 text-xs font-extrabold text-white">
+        <div className="absolute -top-2 -right-2 flex h-7 min-w-7 items-center justify-center rounded-full border-2 border-yellow-100 bg-yellow-500 px-1 text-xs font-extrabold text-black">
           {itemCount}
         </div>
       </div>

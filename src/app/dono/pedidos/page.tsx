@@ -1,9 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 interface OrderItem {
-  id: number;
+  id: string;
   name: string;
   price: number;
   quantity: number;
@@ -14,15 +14,9 @@ interface OrderCustomer {
   phone: string;
   address: string;
   paymentMethod: string;
-  notes?: string;
 }
 
-type OrderStatus =
-  | "novo"
-  | "em_preparo"
-  | "saiu_para_entrega"
-  | "finalizado"
-  | "cancelado";
+type OrderStatus = "received" | "preparing" | "delivering" | "completed";
 
 interface StoredOrder {
   orderId: string;
@@ -38,98 +32,148 @@ interface OrdersResponse {
   orders: StoredOrder[];
 }
 
-const statusOptions: { value: OrderStatus; label: string }[] = [
-  { value: "novo", label: "Novo" },
-  { value: "em_preparo", label: "Em preparo" },
-  { value: "saiu_para_entrega", label: "Saiu para entrega" },
-  { value: "finalizado", label: "Finalizado" },
-  { value: "cancelado", label: "Cancelado" },
+const statusColumns: Array<{ status: OrderStatus; title: string }> = [
+  { status: "received", title: "Recebido" },
+  { status: "preparing", title: "Em preparo" },
+  { status: "delivering", title: "Saiu para entrega" },
+  { status: "completed", title: "Finalizado" },
 ];
 
-const statusLabelMap: Record<OrderStatus, string> = {
-  novo: "Novo",
-  em_preparo: "Em preparo",
-  saiu_para_entrega: "Saiu para entrega",
-  finalizado: "Finalizado",
-  cancelado: "Cancelado",
+const statusChipClass: Record<OrderStatus, string> = {
+  received: "owner-metric-a",
+  preparing: "owner-metric-e",
+  delivering: "owner-metric-f",
+  completed: "owner-metric-d",
 };
 
-const statusBadgeMap: Record<OrderStatus, string> = {
-  novo: "owner-metric-blue",
-  em_preparo: "owner-metric-amber",
-  saiu_para_entrega: "owner-metric-indigo",
-  finalizado: "owner-metric-green",
-  cancelado: "owner-metric-pink",
+const statusLabel: Record<OrderStatus, string> = {
+  received: "Recebido",
+  preparing: "Em preparo",
+  delivering: "Saiu para entrega",
+  completed: "Finalizado",
 };
 
-const formatDate = (value: string) => {
-  return new Date(value).toLocaleString("pt-BR", {
+const nextStatus: Record<OrderStatus, OrderStatus | null> = {
+  received: "preparing",
+  preparing: "delivering",
+  delivering: "completed",
+  completed: null,
+};
+
+const nextActionLabel: Record<OrderStatus, string> = {
+  received: "Mover para preparo",
+  preparing: "Mover para entrega",
+  delivering: "Finalizar pedido",
+  completed: "Finalizado",
+};
+
+const formatDate = (value: string) =>
+  new Date(value).toLocaleString("pt-BR", {
     dateStyle: "short",
     timeStyle: "short",
   });
+
+const playNotificationSound = () => {
+  if (typeof window === "undefined") return;
+  const legacyContext = (
+    window as Window & { webkitAudioContext?: typeof AudioContext }
+  ).webkitAudioContext;
+  const AudioContextClass = window.AudioContext || legacyContext;
+  if (!AudioContextClass) return;
+
+  const ctx = new AudioContextClass();
+  const oscillator = ctx.createOscillator();
+  const gain = ctx.createGain();
+
+  oscillator.type = "triangle";
+  oscillator.frequency.setValueAtTime(720, ctx.currentTime);
+  oscillator.frequency.exponentialRampToValueAtTime(
+    980,
+    ctx.currentTime + 0.16,
+  );
+
+  gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.17, ctx.currentTime + 0.02);
+  gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.2);
+
+  oscillator.connect(gain);
+  gain.connect(ctx.destination);
+
+  oscillator.start();
+  oscillator.stop(ctx.currentTime + 0.22);
 };
 
 export default function OwnerOrdersPage() {
   const [orders, setOrders] = useState<StoredOrder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdatingOrder, setIsUpdatingOrder] = useState<string | null>(null);
-  const [selectedStatusByOrder, setSelectedStatusByOrder] = useState<
-    Record<string, OrderStatus>
-  >({});
-  const [lastUpdatedOrderId, setLastUpdatedOrderId] = useState<string | null>(
-    null,
-  );
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"todos" | OrderStatus>(
-    "todos",
-  );
+  const [search, setSearch] = useState("");
+  const [newOrdersCount, setNewOrdersCount] = useState(0);
+  const baselineLoaded = useRef(false);
+  const knownOrderIds = useRef<Set<string>>(new Set());
 
-  const fetchOrders = useCallback(async (): Promise<StoredOrder[]> => {
+  const fetchOrders = useCallback(async () => {
     const params = new URLSearchParams();
-    if (statusFilter !== "todos") params.set("status", statusFilter);
-    if (searchTerm.trim()) params.set("search", searchTerm.trim());
+    if (search.trim()) params.set("search", search.trim());
 
     const response = await fetch(`/api/orders?${params.toString()}`, {
       cache: "no-store",
     });
-    const data = (await response.json()) as OrdersResponse;
-    return Array.isArray(data.orders) ? data.orders : [];
-  }, [searchTerm, statusFilter]);
+    const payload = (await response.json()) as OrdersResponse;
+
+    return Array.isArray(payload.orders) ? payload.orders : [];
+  }, [search]);
 
   const loadOrders = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const nextOrders = await fetchOrders();
-      setOrders(nextOrders);
-    } finally {
-      setIsLoading(false);
+    const nextOrders = await fetchOrders();
+
+    const incomingIds = new Set(nextOrders.map((order) => order.orderId));
+    if (!baselineLoaded.current) {
+      knownOrderIds.current = incomingIds;
+      baselineLoaded.current = true;
+    } else {
+      const newCount = nextOrders.filter(
+        (order) =>
+          order.status === "received" &&
+          !knownOrderIds.current.has(order.orderId),
+      ).length;
+
+      if (newCount > 0) {
+        setNewOrdersCount((current) => current + newCount);
+        playNotificationSound();
+      }
+
+      knownOrderIds.current = incomingIds;
     }
+
+    setOrders(nextOrders);
   }, [fetchOrders]);
 
   useEffect(() => {
     let mounted = true;
 
-    void fetchOrders().then((nextOrders) => {
-      if (!mounted) return;
-      setOrders(nextOrders);
-      setIsLoading(false);
-    });
+    void (async () => {
+      setIsLoading(true);
+      try {
+        await loadOrders();
+      } finally {
+        if (mounted) setIsLoading(false);
+      }
+    })();
 
     const intervalId = setInterval(() => {
-      void fetchOrders().then((nextOrders) => {
-        if (!mounted) return;
-        setOrders(nextOrders);
-      });
-    }, 10000);
+      void loadOrders();
+    }, 5000);
 
     return () => {
       mounted = false;
       clearInterval(intervalId);
     };
-  }, [fetchOrders]);
+  }, [loadOrders]);
 
   const updateOrderStatus = async (orderId: string, status: OrderStatus) => {
     setIsUpdatingOrder(orderId);
+
     try {
       await fetch("/api/orders", {
         method: "PATCH",
@@ -137,177 +181,190 @@ export default function OwnerOrdersPage() {
         body: JSON.stringify({ orderId, status }),
       });
 
-      await loadOrders();
-      setLastUpdatedOrderId(orderId);
-      setTimeout(() => {
-        setLastUpdatedOrderId((current) =>
-          current === orderId ? null : current,
-        );
-      }, 2200);
+      setOrders((current) =>
+        current.map((order) =>
+          order.orderId === orderId ? { ...order, status } : order,
+        ),
+      );
     } finally {
       setIsUpdatingOrder(null);
     }
   };
 
-  const stats = useMemo(() => {
-    const openOrders = orders.filter(
-      (order) =>
-        order.status === "novo" ||
-        order.status === "em_preparo" ||
-        order.status === "saiu_para_entrega",
-    ).length;
+  const grouped = useMemo(() => {
+    return statusColumns.map((column) => ({
+      ...column,
+      orders: orders.filter((order) => order.status === column.status),
+    }));
+  }, [orders]);
 
-    const today = new Date().toDateString();
-    const todayRevenue = orders
-      .filter((order) => new Date(order.createdAt).toDateString() === today)
+  const summary = useMemo(() => {
+    const open = orders.filter((order) => order.status !== "completed").length;
+    const total = orders.length;
+    const revenue = orders
+      .filter((order) => order.status === "completed")
       .reduce((sum, order) => sum + order.totalValue, 0);
 
-    return {
-      total: orders.length,
-      openOrders,
-      todayRevenue,
-      ticketAverage: orders.length
-        ? orders.reduce((sum, order) => sum + order.totalValue, 0) / orders.length
-        : 0,
-    };
+    return { total, open, revenue };
   }, [orders]);
 
   return (
     <section className="owner-page">
       <header className="owner-hero">
         <h1>Pedidos</h1>
-        <p>Acompanhe status, pagamentos e detalhes de cada pedido.</p>
+        <p>
+          Operação em tempo real com atualização automática a cada 5 segundos.
+        </p>
       </header>
+
+      {newOrdersCount > 0 && (
+        <div className="rounded-2xl border border-yellow-500/40 bg-yellow-500/10 p-3 flex flex-wrap items-center justify-between gap-2 animate-fade-up">
+          <p className="text-sm font-bold text-yellow-300">
+            {newOrdersCount} novo(s) pedido(s) recebido(s).
+          </p>
+          <button
+            onClick={() => setNewOrdersCount(0)}
+            className="rounded-lg bg-yellow-500 px-3 py-1.5 text-xs font-bold text-black hover:bg-yellow-400"
+          >
+            Marcar como visto
+          </button>
+        </div>
+      )}
 
       <div className="owner-panel">
         <div className="owner-toolbar">
           <input
-            type="text"
-            value={searchTerm}
-            onChange={(event) => setSearchTerm(event.target.value)}
-            placeholder="Buscar por cliente, pedido ou item"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Buscar por cliente, telefone ou item"
             className="owner-input"
           />
-          <select
-            value={statusFilter}
-            onChange={(event) =>
-              setStatusFilter(event.target.value as "todos" | OrderStatus)
-            }
-            className="owner-input max-w-[220px]"
-          >
-            <option value="todos">Todos os status</option>
-            {statusOptions.map((status) => (
-              <option key={status.value} value={status.value}>
-                {status.label}
-              </option>
-            ))}
-          </select>
           <button
             onClick={() => void loadOrders()}
             className="owner-input max-w-[170px] font-bold"
           >
-            Aplicar filtro
+            Atualizar agora
           </button>
         </div>
 
         <div className="owner-metrics-grid">
-          <article className="owner-metric-card owner-metric-cyan">
+          <article className="owner-metric-card owner-metric-a">
             <p>Pedidos na tela</p>
-            <strong>{stats.total}</strong>
+            <strong>{summary.total}</strong>
           </article>
-          <article className="owner-metric-card owner-metric-blue">
+          <article className="owner-metric-card owner-metric-b">
             <p>Em andamento</p>
-            <strong>{stats.openOrders}</strong>
+            <strong>{summary.open}</strong>
           </article>
-          <article className="owner-metric-card owner-metric-green">
-            <p>Faturamento hoje</p>
-            <strong>R$ {stats.todayRevenue.toFixed(2)}</strong>
-          </article>
-          <article className="owner-metric-card owner-metric-indigo">
-            <p>Ticket medio</p>
-            <strong>R$ {stats.ticketAverage.toFixed(2)}</strong>
+          <article className="owner-metric-card owner-metric-d">
+            <p>Faturado</p>
+            <strong>R$ {summary.revenue.toFixed(2)}</strong>
           </article>
         </div>
       </div>
 
       {isLoading ? (
         <div className="owner-empty">Carregando pedidos...</div>
-      ) : orders.length === 0 ? (
-        <div className="owner-empty">Nenhum pedido encontrado para os filtros aplicados.</div>
       ) : (
-        <div className="owner-card-grid">
-          {orders.map((order) => (
-            <article key={order.orderId} className="owner-data-card">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <h3>Pedido #{order.orderId}</h3>
-                <span className="text-sm text-slate-300">{formatDate(order.createdAt)}</span>
-              </div>
-
-              <div className="mt-2 flex items-center gap-2">
-                <span className={`owner-metric-card ${statusBadgeMap[order.status]} !p-2 !text-sm`}>
-                  <strong className="!text-base">{statusLabelMap[order.status]}</strong>
+        <div className="grid grid-cols-1 xl:grid-cols-4 gap-3">
+          {grouped.map((column) => (
+            <section
+              key={column.status}
+              className="owner-panel min-h-[220px] flex flex-col"
+            >
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="owner-panel-title !mb-0">{column.title}</h2>
+                <span className="text-xs rounded-full bg-yellow-500 text-black font-extrabold px-2 py-0.5">
+                  {column.orders.length}
                 </span>
               </div>
 
-              <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-2">
-                <p>Cliente: {order.customer.name}</p>
-                <p>Telefone: {order.customer.phone}</p>
-                <p>Endereco: {order.customer.address}</p>
-                <p>Pagamento: {order.customer.paymentMethod}</p>
-              </div>
+              {column.orders.length === 0 ? (
+                <div className="owner-empty !p-4">Sem pedidos</div>
+              ) : (
+                <div className="space-y-3">
+                  {column.orders.map((order) => {
+                    const next = nextStatus[order.status];
 
-              <div className="mt-3 p-3 rounded-xl border border-sky-300/25 bg-slate-950/40">
-                <p className="font-bold mb-2">Status do pedido especifico</p>
-                <div className="flex flex-wrap items-center gap-2">
-                  <select
-                    value={selectedStatusByOrder[order.orderId] ?? order.status}
-                    disabled={isUpdatingOrder === order.orderId}
-                    onChange={(event) =>
-                      setSelectedStatusByOrder((current) => ({
-                        ...current,
-                        [order.orderId]: event.target.value as OrderStatus,
-                      }))
-                    }
-                    className="owner-input max-w-[220px]"
-                  >
-                    {statusOptions.map((status) => (
-                      <option key={status.value} value={status.value}>
-                        {status.label}
-                      </option>
-                    ))}
-                  </select>
-                  <button
-                    onClick={() =>
-                      void updateOrderStatus(
-                        order.orderId,
-                        selectedStatusByOrder[order.orderId] ?? order.status,
-                      )
-                    }
-                    disabled={isUpdatingOrder === order.orderId}
-                    className="owner-input max-w-[180px] font-bold"
-                  >
-                    {isUpdatingOrder === order.orderId ? "Salvando..." : "Salvar status"}
-                  </button>
+                    return (
+                      <article key={order.orderId} className="owner-data-card">
+                        <div className="flex items-center justify-between gap-2">
+                          <h3>#{order.orderId}</h3>
+                          <span className="text-xs text-zinc-300">
+                            {formatDate(order.createdAt)}
+                          </span>
+                        </div>
+
+                        <div className="mt-2 flex items-center gap-2">
+                          <span
+                            className={`owner-metric-card ${statusChipClass[order.status]} !p-2 !text-sm`}
+                          >
+                            <strong className="!text-sm">
+                              {statusLabel[order.status]}
+                            </strong>
+                          </span>
+                        </div>
+
+                        <div className="mt-2 text-sm space-y-1">
+                          <p>Cliente: {order.customer.name}</p>
+                          <p>Pagamento: {order.customer.paymentMethod}</p>
+                          <p>Telefone: {order.customer.phone}</p>
+                        </div>
+
+                        <div className="mt-3 rounded-xl border border-yellow-500/25 bg-zinc-950/35 p-3">
+                          <p className="font-bold text-sm mb-2">Itens</p>
+                          <ul className="space-y-1 text-sm text-zinc-200">
+                            {order.items.map((item) => (
+                              <li key={`${order.orderId}-${item.id}`}>
+                                {item.quantity}x {item.name}
+                              </li>
+                            ))}
+                          </ul>
+                          <p className="mt-2 font-extrabold text-yellow-400">
+                            Total: R$ {order.totalValue.toFixed(2)}
+                          </p>
+                        </div>
+
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {statusColumns.map((statusOption) => (
+                            <button
+                              key={statusOption.status}
+                              onClick={() =>
+                                void updateOrderStatus(
+                                  order.orderId,
+                                  statusOption.status,
+                                )
+                              }
+                              disabled={
+                                isUpdatingOrder === order.orderId ||
+                                statusOption.status === order.status
+                              }
+                              className="rounded-lg border border-yellow-500/30 px-2.5 py-1.5 text-xs font-bold text-zinc-100 hover:bg-yellow-500/15 disabled:opacity-45 disabled:cursor-not-allowed"
+                            >
+                              {statusOption.title}
+                            </button>
+                          ))}
+                        </div>
+
+                        {next && (
+                          <button
+                            onClick={() =>
+                              void updateOrderStatus(order.orderId, next)
+                            }
+                            disabled={isUpdatingOrder === order.orderId}
+                            className="mt-3 w-full rounded-xl bg-yellow-500 px-3 py-2 text-xs font-extrabold text-black hover:bg-yellow-400 disabled:opacity-50"
+                          >
+                            {isUpdatingOrder === order.orderId
+                              ? "Atualizando..."
+                              : nextActionLabel[order.status]}
+                          </button>
+                        )}
+                      </article>
+                    );
+                  })}
                 </div>
-                {lastUpdatedOrderId === order.orderId && (
-                  <p className="mt-2 text-xs text-emerald-300 font-semibold">
-                    Status atualizado com sucesso.
-                  </p>
-                )}
-              </div>
-
-              <div className="mt-3 p-3 rounded-xl border border-sky-300/25 bg-slate-950/40">
-                <p className="font-bold mb-2">Itens</p>
-                <ul className="space-y-1">
-                  {order.items.map((item) => (
-                    <li key={`${order.orderId}-${item.id}`}>
-                      {item.quantity}x {item.name} - R$ {(item.price * item.quantity).toFixed(2)}
-                    </li>
-                  ))}
-                </ul>
-                <p className="mt-2 font-extrabold">Total: R$ {order.totalValue.toFixed(2)}</p>
-              </div>
-            </article>
+              )}
+            </section>
           ))}
         </div>
       )}

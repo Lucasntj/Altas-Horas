@@ -17,12 +17,7 @@ interface OrderCustomer {
   notes?: string;
 }
 
-type OrderStatus =
-  | "novo"
-  | "em_preparo"
-  | "saiu_para_entrega"
-  | "finalizado"
-  | "cancelado";
+type OrderStatus = "received" | "preparing" | "delivering" | "completed";
 
 interface StoredOrder {
   orderId: string;
@@ -64,7 +59,7 @@ export default function OwnerDashboardPage() {
 
   const stats = useMemo(() => {
     const today = new Date().toDateString();
-    const finishedOrders = orders.filter((o) => o.status === "finalizado");
+    const finishedOrders = orders.filter((o) => o.status === "completed");
     const totalRevenue = orders.reduce((sum, o) => sum + o.totalValue, 0);
     const todayRevenue = orders
       .filter((o) => new Date(o.createdAt).toDateString() === today)
@@ -76,9 +71,9 @@ export default function OwnerDashboardPage() {
       totalOrders: orders.length,
       openOrders: orders.filter(
         (o) =>
-          o.status === "novo" ||
-          o.status === "em_preparo" ||
-          o.status === "saiu_para_entrega",
+          o.status === "received" ||
+          o.status === "preparing" ||
+          o.status === "delivering",
       ).length,
       finishedOrders: finishedOrders.length,
       totalRevenue,
@@ -96,31 +91,31 @@ export default function OwnerDashboardPage() {
       </header>
 
       <div className="owner-metrics-grid">
-        <article className="owner-metric-card owner-metric-cyan">
+        <article className="owner-metric-card owner-metric-a">
           <p>Total de pedidos</p>
           <strong>{stats.totalOrders}</strong>
         </article>
-        <article className="owner-metric-card owner-metric-blue">
+        <article className="owner-metric-card owner-metric-b">
           <p>Pedidos em andamento</p>
           <strong>{stats.openOrders}</strong>
         </article>
-        <article className="owner-metric-card owner-metric-purple">
+        <article className="owner-metric-card owner-metric-c">
           <p>Pedidos finalizados</p>
           <strong>{stats.finishedOrders}</strong>
         </article>
-        <article className="owner-metric-card owner-metric-green">
+        <article className="owner-metric-card owner-metric-d">
           <p>Clientes cadastrados</p>
           <strong>{stats.uniqueCustomers}</strong>
         </article>
-        <article className="owner-metric-card owner-metric-amber">
+        <article className="owner-metric-card owner-metric-e">
           <p>Faturamento hoje</p>
           <strong>R$ {stats.todayRevenue.toFixed(2)}</strong>
         </article>
-        <article className="owner-metric-card owner-metric-indigo">
+        <article className="owner-metric-card owner-metric-f">
           <p>Faturamento total</p>
           <strong>R$ {stats.totalRevenue.toFixed(2)}</strong>
         </article>
-        <article className="owner-metric-card owner-metric-pink">
+        <article className="owner-metric-card owner-metric-g">
           <p>Ticket medio</p>
           <strong>R$ {stats.ticketAverage.toFixed(2)}</strong>
         </article>
