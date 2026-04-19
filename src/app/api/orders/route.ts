@@ -69,6 +69,62 @@ const sendWhatsAppText = async (to: string, body: string) => {
   }
 };
 
+const sendWhatsAppTemplate = async (to: string) => {
+  const token = process.env.WHATSAPP_ACCESS_TOKEN;
+  const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
+  const apiVersion = process.env.WHATSAPP_API_VERSION ?? "v21.0";
+
+  if (!token || !phoneNumberId) {
+    throw new Error("WHATSAPP_CONFIG_MISSING");
+  }
+
+  const response = await fetch(
+    `https://graph.facebook.com/${apiVersion}/${phoneNumberId}/messages`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        messaging_product: "whatsapp",
+        recipient_type: "individual",
+        to,
+        type: "template",
+        template: {
+          name: "hello_world",
+          language: {
+            code: "en_US",
+          },
+        },
+      }),
+    },
+  );
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    throw new Error(`WHATSAPP_TEMPLATE_FAILED: ${errorBody}`);
+  }
+};
+
+const mapWhatsAppErrorToHint = (error: unknown): string => {
+  const details = error instanceof Error ? error.message : "";
+
+  if (details.includes("131030") || details.includes("recipient")) {
+    return "Confirme se o numero do cliente foi adicionado como destinatario de teste na Meta.";
+  }
+
+  if (details.includes("190") || details.includes("token")) {
+    return "Token expirado ou invalido. Gere um novo token na Meta e atualize WHATSAPP_ACCESS_TOKEN no Vercel.";
+  }
+
+  if (details.includes("131047") || details.includes("template")) {
+    return "A Meta exige template para iniciar conversa. Valide o template e o numero de destino na configuracao da API.";
+  }
+
+  return "Revise no painel da Meta se o numero de teste e o token estao ativos.";
+};
+
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as OrderPayload;
@@ -133,13 +189,23 @@ export async function POST(request: Request) {
         });
       }
 
-      return NextResponse.json({
-        success: true,
-        orderId,
-        message:
-          "Pedido recebido. Nao foi possivel enviar a confirmacao automaticamente. Use o link de WhatsApp abaixo.",
-        customerWhatsAppUrl,
-      });
+      try {
+        await sendWhatsAppTemplate(customerPhone);
+
+        return NextResponse.json({
+          success: true,
+          orderId,
+          message:
+            "Pedido recebido. A confirmacao foi enviada com template padrao da Meta no WhatsApp do cliente.",
+        });
+      } catch (templateError) {
+        return NextResponse.json({
+          success: true,
+          orderId,
+          message: `Pedido recebido. Nao foi possivel enviar automaticamente. ${mapWhatsAppErrorToHint(templateError)}`,
+          customerWhatsAppUrl,
+        });
+      }
     }
   } catch {
     return NextResponse.json(
