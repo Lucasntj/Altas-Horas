@@ -110,7 +110,11 @@ export default function Cart() {
 
   const handleInputChange =
     (field: keyof CheckoutForm) =>
-    (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    (
+      event: React.ChangeEvent<
+        HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+      >,
+    ) => {
       setForm((current) => ({ ...current, [field]: event.target.value }));
     };
 
@@ -156,23 +160,30 @@ export default function Cart() {
   };
 
   return (
-    <div className="mt-80 min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col">
       <Header />
 
-      <main className="flex-1 p-4 max-w-4xl mx-auto w-full">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-bold text-zinc-800">Seu Carrinho</h2>
+      <main className="section-shell flex-1 pb-8 md:pb-10">
+        <div className="surface-panel animate-fade-up mb-5 p-5 md:p-6 flex items-center justify-between gap-4">
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.16em] font-extrabold text-[#9a6648]">
+              Checkout
+            </p>
+            <h2 className="text-3xl md:text-4xl font-[family-name:var(--font-display)] tracking-wide text-zinc-900">
+              Seu Carrinho
+            </h2>
+          </div>
           <Link
             href="/"
-            className="text-sm text-zinc-600 hover:text-zinc-900 underline"
+            className="text-sm font-semibold text-[#0f766e] hover:text-[#0a5f59]"
           >
             Voltar ao cardapio
           </Link>
         </div>
 
         {cart.length === 0 ? (
-          <div className="bg-white rounded-xl border p-6 text-center">
-            <p className="text-zinc-700 font-medium">
+          <div className="surface-panel p-8 text-center">
+            <p className="text-zinc-700 font-semibold">
               Seu carrinho esta vazio.
             </p>
           </div>
@@ -185,25 +196,25 @@ export default function Cart() {
               onRemove={removeItem}
             />
 
-            <div className="mt-6 bg-white rounded-xl border p-4">
+            <div className="mt-5 surface-panel p-4 md:p-5">
               <div className="flex justify-between text-zinc-700 mb-2">
                 <span>Itens</span>
                 <span>{totalItems}</span>
               </div>
-              <div className="flex justify-between text-xl font-bold text-zinc-900">
+              <div className="flex justify-between text-2xl font-extrabold text-zinc-900">
                 <span>Total</span>
                 <span>R$ {totalValue.toFixed(2)}</span>
               </div>
               <button
                 onClick={clearCart}
-                className="mt-4 w-full rounded-md bg-red-500 hover:bg-red-600 text-white py-2 font-semibold transition-colors"
+                className="mt-4 w-full rounded-xl bg-[#c63f10] hover:bg-[#9f2f08] text-white py-2.5 font-bold"
               >
                 Limpar carrinho
               </button>
             </div>
 
-            <div className="mt-6 bg-white rounded-xl border p-4">
-              <h3 className="text-lg font-bold text-zinc-800 mb-3">
+            <div className="mt-5 surface-panel p-4 md:p-5">
+              <h3 className="text-lg font-extrabold text-zinc-900 mb-3">
                 Dados para fechar pedido
               </h3>
 
@@ -213,26 +224,26 @@ export default function Cart() {
                   placeholder="Seu nome"
                   value={form.customerName}
                   onChange={handleInputChange("customerName")}
-                  className="border rounded-md px-3 py-2"
+                  className="field-base"
                 />
                 <input
                   type="tel"
                   placeholder="WhatsApp (com DDD)"
                   value={form.customerPhone}
                   onChange={handleInputChange("customerPhone")}
-                  className="border rounded-md px-3 py-2"
+                  className="field-base"
                 />
                 <input
                   type="text"
                   placeholder="Endereco de entrega"
                   value={form.deliveryAddress}
                   onChange={handleInputChange("deliveryAddress")}
-                  className="md:col-span-2 border rounded-md px-3 py-2"
+                  className="md:col-span-2 field-base"
                 />
                 <select
                   value={form.paymentMethod}
                   onChange={handleInputChange("paymentMethod")}
-                  className="border rounded-md px-3 py-2"
+                  className="field-base"
                 >
                   <option>Pix</option>
                   <option>Dinheiro</option>
@@ -244,14 +255,14 @@ export default function Cart() {
                   value={form.notes}
                   onChange={handleInputChange("notes")}
                   rows={3}
-                  className="md:col-span-2 border rounded-md px-3 py-2"
+                  className="md:col-span-2 field-base"
                 />
               </div>
 
               <button
                 onClick={placeOrder}
                 disabled={!canSubmitOrder || isSubmitting}
-                className="mt-4 w-full rounded-md bg-green-600 hover:bg-green-700 disabled:bg-zinc-400 text-white py-3 font-semibold transition-colors"
+                className="mt-4 w-full rounded-xl bg-[#0f766e] hover:bg-[#0a5f59] disabled:bg-zinc-400 text-white py-3 font-bold"
               >
                 {isSubmitting ? "Enviando pedido..." : "Finalizar pedido"}
               </button>

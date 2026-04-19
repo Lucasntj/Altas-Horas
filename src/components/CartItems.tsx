@@ -23,56 +23,56 @@ const CartItems = ({
   onRemove,
 }: CartItemsProps) => {
   return (
-    <div className="bg-white rounded-xl border p-4 space-y-4">
+    <div className="surface-panel p-4 md:p-5 space-y-4">
       {items.map((item) => (
-        <div
+        <article
           key={item.id}
-          className="flex gap-3 border-b pb-4 last:border-b-0 last:pb-0"
+          className="animate-fade-up flex gap-3 rounded-xl border border-[#ecd8c0] bg-[#fffdf9] p-3"
         >
           <Image
             src={item.image}
             alt={`Imagem do prato ${item.name}`}
             width={96}
             height={96}
-            className="w-24 h-24 rounded-md object-cover"
+            className="h-24 w-24 rounded-xl object-cover"
           />
 
           <div className="flex-1">
-            <h3 className="font-semibold text-zinc-800">{item.name}</h3>
-            <p className="text-sm text-zinc-600 line-clamp-2">
+            <h3 className="font-extrabold text-zinc-900">{item.name}</h3>
+            <p className="text-sm text-zinc-600 leading-relaxed line-clamp-2">
               {item.description}
             </p>
-            <p className="text-red-500 font-bold mt-1">
+            <p className="text-[#c63f10] font-extrabold mt-2">
               R$ {item.price.toFixed(2)}
             </p>
 
-            <div className="flex items-center gap-2 mt-2">
+            <div className="flex items-center gap-2 mt-3">
               <button
                 onClick={() => onDecrease(item.id)}
-                className="w-8 h-8 rounded-md border border-zinc-300 hover:bg-zinc-100"
+                className="h-8 w-8 rounded-lg border border-[#d3b99e] bg-white font-bold hover:bg-[#fff0df]"
                 aria-label={`Diminuir quantidade de ${item.name}`}
               >
                 -
               </button>
-              <span className="min-w-6 text-center font-semibold">
+              <span className="min-w-7 text-center text-sm font-extrabold text-zinc-800">
                 {item.quantity}
               </span>
               <button
                 onClick={() => onIncrease(item.id)}
-                className="w-8 h-8 rounded-md border border-zinc-300 hover:bg-zinc-100"
+                className="h-8 w-8 rounded-lg border border-[#d3b99e] bg-white font-bold hover:bg-[#fff0df]"
                 aria-label={`Aumentar quantidade de ${item.name}`}
               >
                 +
               </button>
               <button
                 onClick={() => onRemove(item.id)}
-                className="ml-2 text-sm text-red-500 hover:text-red-700 underline"
+                className="ml-2 text-sm font-semibold text-[#c63f10] hover:text-[#9f2f08]"
               >
                 Remover
               </button>
             </div>
           </div>
-        </div>
+        </article>
       ))}
     </div>
   );

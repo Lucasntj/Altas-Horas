@@ -149,7 +149,12 @@ export async function POST(request: Request) {
     const customerPhone = normalizePhone(customer.phone);
     const ownerPhone = normalizePhone(ownerPhoneRaw);
 
-    const ownerMessage = buildOwnerMessage(orderId, customer, items, totalValue);
+    const ownerMessage = buildOwnerMessage(
+      orderId,
+      customer,
+      items,
+      totalValue,
+    );
     const customerMessage = buildCustomerMessage(orderId, customer, totalValue);
 
     const ownerWhatsAppUrl = `https://wa.me/${ownerPhone}?text=${encodeURIComponent(ownerMessage)}`;
@@ -167,7 +172,8 @@ export async function POST(request: Request) {
       });
     } catch (error) {
       const isMissingConfig =
-        error instanceof Error && error.message.includes("WHATSAPP_CONFIG_MISSING");
+        error instanceof Error &&
+        error.message.includes("WHATSAPP_CONFIG_MISSING");
 
       if (isMissingConfig) {
         return NextResponse.json({

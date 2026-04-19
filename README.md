@@ -43,4 +43,3 @@ Se `WHATSAPP_ACCESS_TOKEN` e `WHATSAPP_PHONE_NUMBER_ID` nao estiverem definidos,
 2. Cliente informa nome, WhatsApp e endereco
 3. Sistema envia pedido para o dono
 4. Sistema envia confirmacao para o WhatsApp do cliente
-

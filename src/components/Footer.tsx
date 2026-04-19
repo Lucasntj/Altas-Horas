@@ -1,18 +1,27 @@
-import {IconHeartFilled} from "@tabler/icons-react";
-const Footer = () => {  
-    return (
-        <footer className="px-5 py-2 bg-orange-400 overflow-x-hidden">
-            <div className="flex justify-center flex-col items-center">
-                <p className="font-semibold text-zinc-700 text-center text-[14px]">
-                    Altas Horas &copy; {new Date().getFullYear()} - Todos os direitos reservados
-                </p>
-                <div className="flex items-center ">
-                    <p className="flex gap-2 font-semibold text-center text-zinc-700"> 
-                        Desenvolvido com <IconHeartFilled color="red"/> por Lucas Macedo DEV 
-                    </p> 
-                </div>
-            </div>
-        </footer>
-    )
-}
-    export default Footer;
+import { IconHeartFilled } from "@tabler/icons-react";
+
+const Footer = () => {
+  return (
+    <footer className="mt-10 border-t border-white/30 bg-gradient-to-r from-[#29160d] to-[#462614] px-5 py-6 overflow-x-hidden">
+      <div className="section-shell flex flex-col items-center justify-between gap-3 text-center md:flex-row md:text-left">
+        <div>
+          <p className="text-sm font-semibold text-amber-100">
+            Altas Horas &copy; {new Date().getFullYear()} - Todos os direitos
+            reservados
+          </p>
+          <p className="text-xs text-amber-200/80 mt-1">
+            Cardapio digital com experiencia profissional para clientes e
+            gestao.
+          </p>
+        </div>
+
+        <p className="flex items-center gap-2 text-sm font-semibold text-amber-100">
+          Desenvolvido com <IconHeartFilled size={16} color="#ff6b6b" /> por
+          Lucas Macedo DEV
+        </p>
+      </div>
+    </footer>
+  );
+};
+
+export default Footer;

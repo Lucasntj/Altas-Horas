@@ -2,31 +2,53 @@ import Image from "next/image";
 
 const Header = () => {
   return (
-    <header
-      className="fixed z-40 top-0 left-0 right-0 p-4 text-center shadow-2xl"
-      style={{
-        backgroundImage: "url(/banner6.png)",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        height: "300px",
-      }}
-    >
-      <div className="flex justify-around items-center text-center fixed z-40 left-0 right-0">
-        <div>
-          <Image
-            src="/Logoaltas.png"
-            alt="Logo"
-            width={130}
-            height={130}
-            className="mx-auto w-[130px] h-[130px] rounded-full"
-          />
-          <h1 className="text-3xl font-bold text-zinc-100 ">ALTAS HORAS</h1>
-          <p className="text-green-300 font-bold">Seu melhor pedido!</p>
-          <div className="border-t py-1 pb-2">
-            <h2 className="text-zinc-100"> Horário de funcionamento</h2>
-            <span className="bg-zinc-600 py-1 px-2 rounded-full text-zinc-50">
-              das 18:00 à 02:00
-            </span>
+    <header className="relative overflow-hidden mb-8">
+      <div
+        className="absolute inset-0"
+        style={{
+          backgroundImage: "url(/banner6.png)",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      />
+      <div className="absolute inset-0 bg-gradient-to-br from-[#1f130d]/85 via-[#5b2d11]/65 to-[#0f766e]/55" />
+
+      <div className="relative section-shell pt-6 pb-9 md:pt-8 md:pb-12 animate-fade-up">
+        <div className="inline-flex items-center gap-2 rounded-full border border-white/35 bg-white/15 px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-white backdrop-blur-sm">
+          <span className="h-2 w-2 rounded-full bg-green-300 animate-soft-pulse" />
+          Pedidos online ativos
+        </div>
+
+        <div className="mt-5 flex flex-col items-start gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-center gap-4">
+            <div className="rounded-2xl border border-white/35 bg-white/20 p-2 backdrop-blur-sm shadow-2xl">
+              <Image
+                src="/Logoaltas.png"
+                alt="Logo Altas Horas"
+                width={110}
+                height={110}
+                className="h-[86px] w-[86px] rounded-xl object-cover md:h-[110px] md:w-[110px]"
+              />
+            </div>
+
+            <div>
+              <h1 className="font-[family-name:var(--font-display)] text-5xl md:text-6xl leading-none tracking-wider text-white drop-shadow-md">
+                ALTAS HORAS
+              </h1>
+              <p className="mt-1 text-sm md:text-base font-semibold text-amber-100">
+                Sabor rapido, atendimento profissional, pedido sem complicacao.
+              </p>
+            </div>
+          </div>
+
+          <div className="surface-panel bg-white/95 px-4 py-3 md:px-5 md:py-4">
+            <p className="text-[11px] uppercase tracking-[0.18em] font-bold text-zinc-500">
+              Horario de funcionamento
+            </p>
+            <p className="mt-1 text-lg md:text-xl font-extrabold text-zinc-800">
+              18:00 ate 02:00
+            </p>
+            <p className="text-sm text-zinc-600">Todos os dias</p>
           </div>
         </div>
       </div>

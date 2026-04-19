@@ -60,13 +60,24 @@ export default function Home() {
   };
 
   return (
-    <div className="mt-80">
+    <div className="min-h-screen">
       <Header />
-      <div className="p-4">
-        <h1 className="font-bold text-center text-2xl md:text-center text-zinc-700">
-          Nosso Cardápio
-        </h1>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-7 md:gap-10 mx-auto max-w-7xl px-2 mb-16">
+
+      <main className="section-shell pb-6 md:pb-10">
+        <div className="surface-panel animate-fade-up p-5 md:p-7 mb-5">
+          <p className="text-[11px] uppercase tracking-[0.16em] font-extrabold text-[#9a6648]">
+            Cardapio online
+          </p>
+          <h2 className="mt-1 text-3xl md:text-4xl font-[family-name:var(--font-display)] tracking-wide text-zinc-900">
+            Nosso Cardapio
+          </h2>
+          <p className="mt-2 text-sm md:text-base text-zinc-600 max-w-2xl leading-relaxed">
+            Monte seu pedido em poucos cliques com visual claro, navegacao
+            rapida e checkout pensado para conversao.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5 mb-20">
           {products.map((product) => (
             <MenuItems
               key={product.id}
@@ -79,10 +90,12 @@ export default function Home() {
             />
           ))}
         </div>
+
         <CartButton
           itemCount={cart.reduce((total, item) => total + item.quantity, 0)}
         />
-      </div>
+      </main>
+
       <Footer />
     </div>
   );

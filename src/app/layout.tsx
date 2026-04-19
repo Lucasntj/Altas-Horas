@@ -1,9 +1,21 @@
 import type { Metadata } from "next";
+import { Bebas_Neue, Manrope } from "next/font/google";
 import "./globals.css";
 
+const displayFont = Bebas_Neue({
+  weight: "400",
+  subsets: ["latin"],
+  variable: "--font-display",
+});
+
+const bodyFont = Manrope({
+  subsets: ["latin"],
+  variable: "--font-body",
+});
+
 export const metadata: Metadata = {
-  title: "Altas horas",
-  description: "Seu melhor pedido",
+  title: "Altas Horas | Cardapio e Pedidos",
+  description: "Lanchonete Altas Horas: cardapio, carrinho e pedidos online.",
 };
 
 export default function RootLayout({
@@ -13,7 +25,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR">
-      <body>{children}</body>
+      <body className={`${displayFont.variable} ${bodyFont.variable}`}>
+        {children}
+      </body>
     </html>
   );
 }
