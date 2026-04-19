@@ -89,4 +89,216 @@ textarea {
     border-color: var(--color-brand);
     box-shadow: 0 0 0 3px rgba(237, 93, 31, 0.15);
   }
+
+  .owner-app {
+    @apply min-h-screen;
+    background:
+      radial-gradient(circle at 0% 0%, rgba(35, 106, 255, 0.24), transparent 28%),
+      radial-gradient(circle at 100% 0%, rgba(0, 228, 255, 0.14), transparent 33%),
+      linear-gradient(180deg, #041126 0%, #030b1d 100%);
+    color: #e6eef8;
+  }
+
+  .owner-sidebar {
+    @apply fixed left-0 top-0 h-screen w-[250px] p-3 flex flex-col;
+    background: linear-gradient(180deg, rgba(8, 21, 45, 0.98) 0%, rgba(4, 12, 27, 0.98) 100%);
+    border-right: 1px solid rgba(91, 122, 170, 0.25);
+  }
+
+  .owner-brand {
+    @apply rounded-2xl p-4;
+    background: linear-gradient(135deg, rgba(25, 106, 187, 0.28), rgba(15, 30, 64, 0.8));
+    border: 1px solid rgba(84, 149, 231, 0.45);
+  }
+
+  .owner-brand-title {
+    @apply text-xl font-extrabold tracking-wide;
+  }
+
+  .owner-brand-subtitle {
+    @apply text-xs text-sky-200/90 mt-1;
+  }
+
+  .owner-user-card {
+    @apply mt-4 rounded-2xl p-3 flex items-center gap-3;
+    background: rgba(19, 34, 63, 0.9);
+    border: 1px solid rgba(91, 122, 170, 0.35);
+  }
+
+  .owner-user-avatar {
+    @apply w-10 h-10 rounded-full flex items-center justify-center font-bold;
+    background: linear-gradient(135deg, #38bdf8, #2563eb);
+  }
+
+  .owner-user-name {
+    @apply text-sm font-bold;
+  }
+
+  .owner-user-role {
+    @apply text-xs text-slate-300;
+  }
+
+  .owner-nav-list {
+    @apply mt-4 flex-1 space-y-1;
+  }
+
+  .owner-nav-item {
+    @apply rounded-xl px-3 py-2.5 flex items-center gap-2.5 text-sm font-semibold text-slate-300;
+    border: 1px solid transparent;
+  }
+
+  .owner-nav-item:hover {
+    @apply text-white;
+    background: rgba(39, 73, 123, 0.4);
+  }
+
+  .owner-nav-item.is-active {
+    background: linear-gradient(90deg, rgba(37, 99, 235, 0.35), rgba(56, 189, 248, 0.22));
+    border-color: rgba(95, 158, 242, 0.5);
+    color: #fff;
+  }
+
+  .owner-logout-btn {
+    @apply mt-auto rounded-xl px-3 py-2.5 flex items-center gap-2 text-sm font-semibold text-rose-100;
+    background: linear-gradient(90deg, rgba(127, 29, 29, 0.5), rgba(76, 5, 25, 0.5));
+    border: 1px solid rgba(244, 114, 182, 0.28);
+  }
+
+  .owner-content-wrap {
+    @apply ml-[250px] min-h-screen;
+  }
+
+  .owner-main {
+    @apply p-6 md:p-7;
+  }
+
+  .owner-page {
+    @apply space-y-5;
+  }
+
+  .owner-hero {
+    @apply rounded-3xl p-6;
+    background: linear-gradient(90deg, rgba(7, 30, 60, 0.92), rgba(10, 58, 88, 0.78));
+    border: 1px solid rgba(74, 159, 226, 0.35);
+    box-shadow: 0 18px 40px rgba(5, 13, 35, 0.32);
+  }
+
+  .owner-hero h1 {
+    @apply text-4xl font-black tracking-tight;
+  }
+
+  .owner-hero p {
+    @apply mt-2 text-slate-300 font-medium;
+  }
+
+  .owner-panel {
+    @apply rounded-3xl p-5;
+    background: linear-gradient(180deg, rgba(16, 35, 65, 0.92), rgba(10, 21, 43, 0.95));
+    border: 1px solid rgba(79, 124, 194, 0.32);
+  }
+
+  .owner-panel-title {
+    @apply text-xl font-extrabold mb-3;
+  }
+
+  .owner-toolbar {
+    @apply flex flex-wrap items-center gap-3 mb-4;
+  }
+
+  .owner-input {
+    @apply rounded-xl px-4 py-2.5 text-sm font-medium min-w-[280px] max-w-full;
+    border: 1px solid rgba(83, 130, 204, 0.45);
+    background: rgba(2, 13, 35, 0.8);
+    color: #e7f1ff;
+  }
+
+  .owner-input:focus {
+    outline: none;
+    border-color: rgba(56, 189, 248, 0.9);
+    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.18);
+  }
+
+  .owner-card-grid {
+    @apply grid grid-cols-1 xl:grid-cols-2 gap-3;
+  }
+
+  .owner-data-card {
+    @apply rounded-2xl p-4;
+    background: linear-gradient(135deg, rgba(13, 53, 84, 0.65), rgba(20, 28, 54, 0.65));
+    border: 1px solid rgba(78, 141, 218, 0.35);
+  }
+
+  .owner-data-card h3 {
+    @apply text-xl font-extrabold;
+  }
+
+  .owner-data-card p {
+    @apply text-sm text-slate-200 mt-1;
+  }
+
+  .owner-empty {
+    @apply rounded-2xl p-6 text-center text-slate-300 font-semibold col-span-full;
+    border: 1px dashed rgba(96, 165, 250, 0.55);
+    background: rgba(15, 29, 54, 0.6);
+  }
+
+  .owner-metrics-grid {
+    @apply grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3;
+  }
+
+  .owner-metric-card {
+    @apply rounded-2xl p-4;
+    border: 1px solid rgba(122, 173, 255, 0.28);
+    background: linear-gradient(180deg, rgba(6, 25, 47, 0.85), rgba(10, 28, 57, 0.9));
+  }
+
+  .owner-metric-card p {
+    @apply text-sm text-slate-300 font-semibold;
+  }
+
+  .owner-metric-card strong {
+    @apply mt-2 block text-4xl font-black;
+  }
+
+  .owner-metric-cyan strong {
+    @apply text-cyan-300;
+  }
+
+  .owner-metric-blue strong {
+    @apply text-sky-300;
+  }
+
+  .owner-metric-purple strong {
+    @apply text-violet-300;
+  }
+
+  .owner-metric-green strong {
+    @apply text-emerald-300;
+  }
+
+  .owner-metric-amber strong {
+    @apply text-amber-300;
+  }
+
+  .owner-metric-indigo strong {
+    @apply text-indigo-300;
+  }
+
+  .owner-metric-pink strong {
+    @apply text-fuchsia-300;
+  }
+
+  @media (max-width: 960px) {
+    .owner-sidebar {
+      @apply static w-full h-auto;
+    }
+
+    .owner-content-wrap {
+      @apply ml-0;
+    }
+
+    .owner-main {
+      @apply p-4;
+    }
+  }
 }

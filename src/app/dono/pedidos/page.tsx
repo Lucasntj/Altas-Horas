@@ -1,9 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import Link from "next/link";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 
 interface OrderItem {
   id: number;
@@ -20,6 +17,13 @@ interface OrderCustomer {
   notes?: string;
 }
 
+type OrderStatus =
+  | "novo"
+  | "em_preparo"
+  | "saiu_para_entrega"
+  | "finalizado"
+  | "cancelado";
+
 interface StoredOrder {
   orderId: string;
   createdAt: string;
@@ -28,13 +32,6 @@ interface StoredOrder {
   totalValue: number;
   status: OrderStatus;
 }
-
-type OrderStatus =
-  | "novo"
-  | "em_preparo"
-  | "saiu_para_entrega"
-  | "finalizado"
-  | "cancelado";
 
 interface OrdersResponse {
   success: boolean;
@@ -48,6 +45,22 @@ const statusOptions: { value: OrderStatus; label: string }[] = [
   { value: "finalizado", label: "Finalizado" },
   { value: "cancelado", label: "Cancelado" },
 ];
+
+const statusLabelMap: Record<OrderStatus, string> = {
+  novo: "Novo",
+  em_preparo: "Em preparo",
+  saiu_para_entrega: "Saiu para entrega",
+  finalizado: "Finalizado",
+  cancelado: "Cancelado",
+};
+
+const statusBadgeMap: Record<OrderStatus, string> = {
+  novo: "owner-metric-blue",
+  em_preparo: "owner-metric-amber",
+  saiu_para_entrega: "owner-metric-indigo",
+  finalizado: "owner-metric-green",
+  cancelado: "owner-metric-pink",
+};
 
 const formatDate = (value: string) => {
   return new Date(value).toLocaleString("pt-BR", {
@@ -71,30 +84,10 @@ export default function OwnerOrdersPage() {
     "todos",
   );
 
-  const statusLabelMap: Record<OrderStatus, string> = {
-    novo: "Novo",
-    em_preparo: "Em preparo",
-    saiu_para_entrega: "Saiu para entrega",
-    finalizado: "Finalizado",
-    cancelado: "Cancelado",
-  };
-
-  const statusBadgeMap: Record<OrderStatus, string> = {
-    novo: "bg-blue-50 text-blue-700 border-blue-200",
-    em_preparo: "bg-amber-50 text-amber-700 border-amber-200",
-    saiu_para_entrega: "bg-indigo-50 text-indigo-700 border-indigo-200",
-    finalizado: "bg-emerald-50 text-emerald-700 border-emerald-200",
-    cancelado: "bg-rose-50 text-rose-700 border-rose-200",
-  };
-
   const fetchOrders = useCallback(async (): Promise<StoredOrder[]> => {
     const params = new URLSearchParams();
-    if (statusFilter !== "todos") {
-      params.set("status", statusFilter);
-    }
-    if (searchTerm.trim()) {
-      params.set("search", searchTerm.trim());
-    }
+    if (statusFilter !== "todos") params.set("status", statusFilter);
+    if (searchTerm.trim()) params.set("search", searchTerm.trim());
 
     const response = await fetch(`/api/orders?${params.toString()}`, {
       cache: "no-store",
@@ -113,14 +106,34 @@ export default function OwnerOrdersPage() {
     }
   }, [fetchOrders]);
 
+  useEffect(() => {
+    let mounted = true;
+
+    void fetchOrders().then((nextOrders) => {
+      if (!mounted) return;
+      setOrders(nextOrders);
+      setIsLoading(false);
+    });
+
+    const intervalId = setInterval(() => {
+      void fetchOrders().then((nextOrders) => {
+        if (!mounted) return;
+        setOrders(nextOrders);
+      });
+    }, 10000);
+
+    return () => {
+      mounted = false;
+      clearInterval(intervalId);
+    };
+  }, [fetchOrders]);
+
   const updateOrderStatus = async (orderId: string, status: OrderStatus) => {
     setIsUpdatingOrder(orderId);
     try {
       await fetch("/api/orders", {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ orderId, status }),
       });
 
@@ -130,261 +143,174 @@ export default function OwnerOrdersPage() {
         setLastUpdatedOrderId((current) =>
           current === orderId ? null : current,
         );
-      }, 2500);
+      }, 2200);
     } finally {
       setIsUpdatingOrder(null);
     }
   };
 
-  useEffect(() => {
-    let isMounted = true;
-
-    void fetchOrders().then((nextOrders) => {
-      if (!isMounted) return;
-      setOrders(nextOrders);
-      setIsLoading(false);
-    });
-
-    const intervalId = setInterval(() => {
-      void fetchOrders().then((nextOrders) => {
-        if (!isMounted) return;
-        setOrders(nextOrders);
-      });
-    }, 10000);
-
-    return () => {
-      isMounted = false;
-      clearInterval(intervalId);
-    };
-  }, [fetchOrders]);
-
-  const totalToday = useMemo(() => {
-    const today = new Date().toDateString();
-    return orders
-      .filter((order) => new Date(order.createdAt).toDateString() === today)
-      .reduce((acc, order) => acc + order.totalValue, 0);
-  }, [orders]);
-
-  const totalOpenOrders = useMemo(() => {
-    return orders.filter(
+  const stats = useMemo(() => {
+    const openOrders = orders.filter(
       (order) =>
         order.status === "novo" ||
         order.status === "em_preparo" ||
         order.status === "saiu_para_entrega",
     ).length;
-  }, [orders]);
 
-  const averageTicket = useMemo(() => {
-    if (orders.length === 0) return 0;
-    const total = orders.reduce((acc, order) => acc + order.totalValue, 0);
-    return total / orders.length;
+    const today = new Date().toDateString();
+    const todayRevenue = orders
+      .filter((order) => new Date(order.createdAt).toDateString() === today)
+      .reduce((sum, order) => sum + order.totalValue, 0);
+
+    return {
+      total: orders.length,
+      openOrders,
+      todayRevenue,
+      ticketAverage: orders.length
+        ? orders.reduce((sum, order) => sum + order.totalValue, 0) / orders.length
+        : 0,
+    };
   }, [orders]);
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
+    <section className="owner-page">
+      <header className="owner-hero">
+        <h1>Pedidos</h1>
+        <p>Acompanhe status, pagamentos e detalhes de cada pedido.</p>
+      </header>
 
-      <main className="section-shell flex-1 pb-10">
-        <div className="surface-panel p-5 md:p-6 mb-5 flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <p className="text-[11px] uppercase tracking-[0.16em] font-extrabold text-[#9a6648]">
-              Area do dono
-            </p>
-            <h1 className="text-3xl md:text-4xl font-[family-name:var(--font-display)] tracking-wide text-zinc-900">
-              Pedidos recebidos
-            </h1>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(event) => setSearchTerm(event.target.value)}
-              placeholder="Buscar por cliente, pedido ou item"
-              className="field-base w-[280px] max-w-full py-2 text-sm"
-            />
-            <select
-              value={statusFilter}
-              onChange={(event) =>
-                setStatusFilter(event.target.value as "todos" | OrderStatus)
-              }
-              className="field-base py-2 text-sm"
-            >
-              <option value="todos">Todos os status</option>
-              {statusOptions.map((status) => (
-                <option key={status.value} value={status.value}>
-                  {status.label}
-                </option>
-              ))}
-            </select>
-            <button
-              onClick={() => void loadOrders()}
-              className="rounded-xl bg-[#0f766e] px-4 py-2 text-sm font-bold text-white hover:bg-[#0a5f59]"
-            >
-              Atualizar
-            </button>
-            <Link
-              href="/"
-              className="rounded-xl border border-[#d3b99e] px-4 py-2 text-sm font-bold text-zinc-700 hover:bg-[#fff0df]"
-            >
-              Voltar ao site
-            </Link>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-5">
-          <div className="surface-panel p-4">
-            <p className="text-sm text-zinc-500">Pedidos na tela</p>
-            <p className="text-2xl font-extrabold text-zinc-900">
-              {orders.length}
-            </p>
-          </div>
-          <div className="surface-panel p-4">
-            <p className="text-sm text-zinc-500">Pedidos em andamento</p>
-            <p className="text-2xl font-extrabold text-zinc-900">
-              {totalOpenOrders}
-            </p>
-          </div>
-          <div className="surface-panel p-4">
-            <p className="text-sm text-zinc-500">Faturamento de hoje</p>
-            <p className="text-2xl font-extrabold text-zinc-900">
-              R$ {totalToday.toFixed(2)}
-            </p>
-          </div>
-          <div className="surface-panel p-4">
-            <p className="text-sm text-zinc-500">Ticket medio</p>
-            <p className="text-2xl font-extrabold text-zinc-900">
-              R$ {averageTicket.toFixed(2)}
-            </p>
-            <p className="text-xs font-semibold text-zinc-700 mt-1">
-              Atualiza a cada 10s
-            </p>
-          </div>
-        </div>
-
-        <div className="surface-panel p-3 mb-5">
-          <p className="text-sm font-semibold text-zinc-800">
-            Filtro ativo:{" "}
-            {statusFilter === "todos"
-              ? "Todos os status"
-              : statusLabelMap[statusFilter]}
-          </p>
-        </div>
-
-        {isLoading ? (
-          <div className="surface-panel p-6 text-center font-semibold text-zinc-700">
-            Carregando pedidos...
-          </div>
-        ) : orders.length === 0 ? (
-          <div className="surface-panel p-6 text-center font-semibold text-zinc-700">
-            Nenhum pedido recebido ainda.
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {orders.map((order) => (
-              <article key={order.orderId} className="surface-panel p-4 md:p-5">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <h2 className="text-lg font-extrabold text-zinc-900">
-                    Pedido #{order.orderId}
-                  </h2>
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`rounded-full border px-2.5 py-1 text-xs font-bold ${statusBadgeMap[order.status]}`}
-                    >
-                      {statusLabelMap[order.status]}
-                    </span>
-                    <span className="text-sm font-semibold text-zinc-600">
-                      {formatDate(order.createdAt)}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="mt-3 rounded-xl border border-[#ecd8c0] bg-[#fffdf9] p-3">
-                  <p className="text-sm font-bold text-zinc-800 mb-2">
-                    Status deste pedido
-                  </p>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <select
-                      value={selectedStatusByOrder[order.orderId] ?? order.status}
-                      disabled={isUpdatingOrder === order.orderId}
-                      onChange={(event) =>
-                        setSelectedStatusByOrder((current) => ({
-                          ...current,
-                          [order.orderId]: event.target.value as OrderStatus,
-                        }))
-                      }
-                      className="field-base max-w-[220px] py-1.5"
-                    >
-                      {statusOptions.map((status) => (
-                        <option key={status.value} value={status.value}>
-                          {status.label}
-                        </option>
-                      ))}
-                    </select>
-                    <button
-                      onClick={() =>
-                        void updateOrderStatus(
-                          order.orderId,
-                          selectedStatusByOrder[order.orderId] ?? order.status,
-                        )
-                      }
-                      disabled={isUpdatingOrder === order.orderId}
-                      className="rounded-lg bg-[#0f766e] px-3 py-2 text-xs font-bold text-white hover:bg-[#0a5f59] disabled:bg-zinc-400"
-                    >
-                      {isUpdatingOrder === order.orderId
-                        ? "Salvando..."
-                        : "Salvar status"}
-                    </button>
-                  </div>
-                  {lastUpdatedOrderId === order.orderId && (
-                    <p className="mt-2 text-xs font-semibold text-emerald-700">
-                      Status atualizado com sucesso.
-                    </p>
-                  )}
-                </div>
-
-                <p className="mt-2 text-sm text-zinc-700">
-                  <span className="font-bold">Cliente:</span>{" "}
-                  {order.customer.name}
-                </p>
-                <p className="text-sm text-zinc-700">
-                  <span className="font-bold">WhatsApp:</span>{" "}
-                  {order.customer.phone}
-                </p>
-                <p className="text-sm text-zinc-700">
-                  <span className="font-bold">Endereco:</span>{" "}
-                  {order.customer.address}
-                </p>
-                <p className="text-sm text-zinc-700">
-                  <span className="font-bold">Pagamento:</span>{" "}
-                  {order.customer.paymentMethod}
-                </p>
-                <p className="text-sm text-zinc-700">
-                  <span className="font-bold">Observacoes:</span>{" "}
-                  {order.customer.notes || "-"}
-                </p>
-
-                <div className="mt-3 rounded-xl border border-[#ecd8c0] bg-[#fffdf9] p-3">
-                  <p className="text-sm font-bold text-zinc-800 mb-2">Itens</p>
-                  <ul className="space-y-1 text-sm text-zinc-700">
-                    {order.items.map((item) => (
-                      <li key={`${order.orderId}-${item.id}`}>
-                        {item.quantity}x {item.name} - R${" "}
-                        {(item.price * item.quantity).toFixed(2)}
-                      </li>
-                    ))}
-                  </ul>
-                  <p className="mt-2 text-base font-extrabold text-zinc-900">
-                    Total: R$ {order.totalValue.toFixed(2)}
-                  </p>
-                </div>
-              </article>
+      <div className="owner-panel">
+        <div className="owner-toolbar">
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+            placeholder="Buscar por cliente, pedido ou item"
+            className="owner-input"
+          />
+          <select
+            value={statusFilter}
+            onChange={(event) =>
+              setStatusFilter(event.target.value as "todos" | OrderStatus)
+            }
+            className="owner-input max-w-[220px]"
+          >
+            <option value="todos">Todos os status</option>
+            {statusOptions.map((status) => (
+              <option key={status.value} value={status.value}>
+                {status.label}
+              </option>
             ))}
-          </div>
-        )}
-      </main>
+          </select>
+          <button
+            onClick={() => void loadOrders()}
+            className="owner-input max-w-[170px] font-bold"
+          >
+            Aplicar filtro
+          </button>
+        </div>
 
-      <Footer />
-    </div>
+        <div className="owner-metrics-grid">
+          <article className="owner-metric-card owner-metric-cyan">
+            <p>Pedidos na tela</p>
+            <strong>{stats.total}</strong>
+          </article>
+          <article className="owner-metric-card owner-metric-blue">
+            <p>Em andamento</p>
+            <strong>{stats.openOrders}</strong>
+          </article>
+          <article className="owner-metric-card owner-metric-green">
+            <p>Faturamento hoje</p>
+            <strong>R$ {stats.todayRevenue.toFixed(2)}</strong>
+          </article>
+          <article className="owner-metric-card owner-metric-indigo">
+            <p>Ticket medio</p>
+            <strong>R$ {stats.ticketAverage.toFixed(2)}</strong>
+          </article>
+        </div>
+      </div>
+
+      {isLoading ? (
+        <div className="owner-empty">Carregando pedidos...</div>
+      ) : orders.length === 0 ? (
+        <div className="owner-empty">Nenhum pedido encontrado para os filtros aplicados.</div>
+      ) : (
+        <div className="owner-card-grid">
+          {orders.map((order) => (
+            <article key={order.orderId} className="owner-data-card">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h3>Pedido #{order.orderId}</h3>
+                <span className="text-sm text-slate-300">{formatDate(order.createdAt)}</span>
+              </div>
+
+              <div className="mt-2 flex items-center gap-2">
+                <span className={`owner-metric-card ${statusBadgeMap[order.status]} !p-2 !text-sm`}>
+                  <strong className="!text-base">{statusLabelMap[order.status]}</strong>
+                </span>
+              </div>
+
+              <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-2">
+                <p>Cliente: {order.customer.name}</p>
+                <p>Telefone: {order.customer.phone}</p>
+                <p>Endereco: {order.customer.address}</p>
+                <p>Pagamento: {order.customer.paymentMethod}</p>
+              </div>
+
+              <div className="mt-3 p-3 rounded-xl border border-sky-300/25 bg-slate-950/40">
+                <p className="font-bold mb-2">Status do pedido especifico</p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <select
+                    value={selectedStatusByOrder[order.orderId] ?? order.status}
+                    disabled={isUpdatingOrder === order.orderId}
+                    onChange={(event) =>
+                      setSelectedStatusByOrder((current) => ({
+                        ...current,
+                        [order.orderId]: event.target.value as OrderStatus,
+                      }))
+                    }
+                    className="owner-input max-w-[220px]"
+                  >
+                    {statusOptions.map((status) => (
+                      <option key={status.value} value={status.value}>
+                        {status.label}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    onClick={() =>
+                      void updateOrderStatus(
+                        order.orderId,
+                        selectedStatusByOrder[order.orderId] ?? order.status,
+                      )
+                    }
+                    disabled={isUpdatingOrder === order.orderId}
+                    className="owner-input max-w-[180px] font-bold"
+                  >
+                    {isUpdatingOrder === order.orderId ? "Salvando..." : "Salvar status"}
+                  </button>
+                </div>
+                {lastUpdatedOrderId === order.orderId && (
+                  <p className="mt-2 text-xs text-emerald-300 font-semibold">
+                    Status atualizado com sucesso.
+                  </p>
+                )}
+              </div>
+
+              <div className="mt-3 p-3 rounded-xl border border-sky-300/25 bg-slate-950/40">
+                <p className="font-bold mb-2">Itens</p>
+                <ul className="space-y-1">
+                  {order.items.map((item) => (
+                    <li key={`${order.orderId}-${item.id}`}>
+                      {item.quantity}x {item.name} - R$ {(item.price * item.quantity).toFixed(2)}
+                    </li>
+                  ))}
+                </ul>
+                <p className="mt-2 font-extrabold">Total: R$ {order.totalValue.toFixed(2)}</p>
+              </div>
+            </article>
+          ))}
+        </div>
+      )}
+    </section>
   );
 }
