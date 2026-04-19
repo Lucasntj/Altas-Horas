@@ -4,7 +4,7 @@ import { IconClock, IconMapPin, IconTruck } from "@tabler/icons-react";
 export default function DeliveryBanner() {
   return (
     <div className="rounded-2xl border border-yellow-500/26 bg-gradient-to-r from-yellow-500/10 to-yellow-300/5 px-3 py-2.5 sm:px-4 sm:py-3">
-      <div className="grid grid-cols-1 gap-1.5 text-[14px] sm:grid-cols-3 sm:gap-3 sm:text-sm">
+      <div className="grid grid-cols-1 gap-1.5 text-[14px] md:grid-cols-3 md:gap-3 md:text-sm">
         <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-zinc-200">
           <IconClock
             size={16}

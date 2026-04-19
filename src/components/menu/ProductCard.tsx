@@ -62,17 +62,17 @@ export default function ProductCard({ product, canOrder = true }: Props) {
         ))}
       </div>
 
-      <div className="relative flex gap-2.5 md:gap-3">
-        <div className="w-[116px] shrink-0 md:w-[150px]">
+      <div className="relative flex gap-2.5 md:flex-col md:gap-3">
+        <div className="w-[116px] shrink-0 md:w-full">
           <Image
             src={product.image}
             alt={product.name}
             width={220}
             height={130}
-            className={`h-[130px] w-full rounded-[12px] object-cover object-center ${
+            className={`h-[130px] w-full rounded-[12px] object-cover object-center md:h-[170px] lg:h-[185px] ${
               product.isAvailable ? "" : "grayscale"
             }`}
-            sizes="(max-width: 768px) 116px, 150px"
+            sizes="(max-width: 768px) 116px, (max-width: 1024px) 50vw, 33vw"
           />
         </div>
 
@@ -90,7 +90,7 @@ export default function ProductCard({ product, canOrder = true }: Props) {
           <button
             onClick={handleAdd}
             disabled={!product.isAvailable || !canOrder}
-            className="absolute bottom-0 right-0 flex min-h-10 items-center gap-1.5 rounded-[10px] bg-yellow-500 px-[14px] py-[10px] text-xs font-bold text-black shadow-md shadow-yellow-500/30 transition-all hover:bg-yellow-400 active:scale-95 disabled:cursor-not-allowed disabled:bg-zinc-500 disabled:text-zinc-900 disabled:shadow-none"
+            className="absolute bottom-0 right-0 flex min-h-10 items-center gap-1.5 rounded-[10px] bg-yellow-500 px-[14px] py-[10px] text-xs font-bold text-black shadow-md shadow-yellow-500/30 transition-all hover:bg-yellow-400 active:scale-95 disabled:cursor-not-allowed disabled:bg-zinc-500 disabled:text-zinc-900 disabled:shadow-none md:static md:mt-3 md:ml-auto"
             aria-label={
               product.isAvailable
                 ? `Adicionar ${product.name} ao carrinho`

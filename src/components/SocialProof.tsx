@@ -33,13 +33,13 @@ const reviews = [
 
 export default function SocialProof() {
   return (
-    <section className="py-2">
-      <div className="mb-4 flex items-center justify-between">
+    <section className="py-1.5 sm:py-2">
+      <div className="mb-3 flex items-center justify-between sm:mb-4">
         <div>
           <p className="text-xs font-extrabold uppercase tracking-widest text-yellow-500">
             Avaliações
           </p>
-          <h2 className="mt-0.5 text-2xl font-extrabold text-white">
+          <h2 className="mt-0.5 text-[20px] font-extrabold text-white sm:text-2xl">
             O que nossos clientes dizem
           </h2>
         </div>
@@ -57,11 +57,11 @@ export default function SocialProof() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-2.5 sm:gap-3 sm:grid-cols-2">
         {reviews.map((review) => (
           <div
             key={review.id}
-            className="rounded-2xl border border-white/8 bg-zinc-900 p-4"
+            className="rounded-2xl border border-white/8 bg-zinc-900 p-3 sm:p-4"
           >
             <div className="flex items-start justify-between gap-2">
               <div className="flex items-center gap-2">
@@ -85,7 +85,7 @@ export default function SocialProof() {
                 ))}
               </div>
             </div>
-            <p className="mt-3 text-sm leading-relaxed text-zinc-400">
+            <p className="mt-2.5 text-[13px] leading-relaxed text-zinc-400 sm:mt-3 sm:text-sm">
               &ldquo;{review.text}&rdquo;
             </p>
           </div>
