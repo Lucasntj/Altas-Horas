@@ -8,7 +8,7 @@ const Header = () => {
   const { totalItems, openCart } = useCart();
 
   return (
-    <header className="relative mb-3 overflow-hidden sm:mb-6">
+    <header className="relative mb-2 overflow-hidden sm:mb-6">
       <div
         className="absolute inset-0"
         style={{
@@ -17,14 +17,15 @@ const Header = () => {
           backgroundPosition: "center",
         }}
       />
-      <div className="absolute inset-0 bg-gradient-to-br from-[#070707]/95 via-[#1e1804]/86 to-[#050505]/94" />
+      <div className="absolute inset-0 bg-gradient-to-br from-[#040404]/98 via-[#151515]/94 to-[#040404]/98" />
 
-      <div className="section-shell relative animate-fade-up pt-3 pb-4 md:pt-7 md:pb-11">
+      <div className="section-shell relative animate-fade-up pt-2.5 pb-3.5 md:pt-7 md:pb-11">
         {/* Barra superior: badge de status + botão carrinho */}
         <div className="flex items-center justify-between gap-3">
           <div className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-white backdrop-blur-sm sm:text-xs sm:tracking-[0.14em]">
             <span className="h-2 w-2 rounded-full bg-yellow-400 animate-soft-pulse" />
-            Pedidos online ativos
+            <span className="sm:hidden">Online</span>
+            <span className="hidden sm:inline">Pedidos online ativos</span>
           </div>
 
           <button
@@ -43,7 +44,7 @@ const Header = () => {
         </div>
 
         {/* Logo e nome */}
-        <div className="mt-3 flex items-center gap-2 rounded-2xl border border-white/10 bg-black/45 p-2 backdrop-blur-[2px] sm:mt-5 sm:gap-4 sm:p-3">
+        <div className="mt-2.5 flex items-center gap-2 rounded-2xl border border-white/15 bg-black/65 p-2 backdrop-blur-md sm:mt-5 sm:gap-4 sm:p-3">
           <div className="rounded-2xl border border-white/30 bg-white/15 p-2 backdrop-blur-sm shadow-2xl">
             <Image
               src="/Logoaltas.png"
@@ -57,7 +58,7 @@ const Header = () => {
             <h1 className="font-[family-name:var(--font-display)] text-[20px] leading-none tracking-[0.03em] text-white drop-shadow-md sm:text-5xl md:text-6xl">
               ALTAS HORAS
             </h1>
-            <p className="mt-1 text-[14px] font-semibold leading-tight text-zinc-100 sm:text-sm md:text-base">
+            <p className="mt-1 line-clamp-2 text-[14px] font-semibold leading-tight text-zinc-100 sm:text-sm md:text-base">
               Sabor rápido, atendimento profissional, pedido sem complicação.
             </p>
           </div>

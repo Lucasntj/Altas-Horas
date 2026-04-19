@@ -57,9 +57,7 @@ export default function ProductCard({ product, canOrder = true }: Props) {
           src={product.image}
           alt={product.name}
           fill
-          className={`object-cover ${
-            product.isAvailable ? "" : "grayscale"
-          }`}
+          className={`object-cover ${product.isAvailable ? "" : "grayscale"}`}
           sizes="(max-width: 768px) 100vw, 50vw"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-zinc-900/60 to-transparent" />
