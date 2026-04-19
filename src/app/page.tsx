@@ -91,6 +91,13 @@ export default function Home() {
     return formatStoreHours(storeSettings);
   }, [storeSettings]);
 
+  const operatingHoursLabel = useMemo(() => {
+    if (!storeSettings) return "";
+    return `${String(storeSettings.openHour).padStart(2, "0")}h às ${String(
+      storeSettings.closeHour,
+    ).padStart(2, "0")}h`;
+  }, [storeSettings]);
+
   const counts = useMemo(
     () => ({
       todos: products.length,
@@ -120,7 +127,10 @@ export default function Home() {
       <Header />
 
       <main className="section-shell flex-1 space-y-4 pb-28 sm:space-y-6 sm:pb-10">
-        <DeliveryBanner />
+        <DeliveryBanner
+          operatingHours={operatingHoursLabel}
+          forceOpen={Boolean(storeSettings?.forceOpen)}
+        />
 
         {!isStoreOpen && (
           <div className="rounded-2xl border border-yellow-500/45 bg-yellow-500/10 p-4 text-center animate-fade-up">
