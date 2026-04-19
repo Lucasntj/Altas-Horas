@@ -13,9 +13,9 @@ Aplicacao Next.js para cardapio e fechamento de pedidos da lanchonete.
 
 ## Persistencia de pedidos
 
-- Nesta fase, os pedidos sao salvos em arquivo local `.data/orders.json`.
-- Isso evita perda imediata de pedidos em reinicio local do servidor.
-- Para producao com alta confiabilidade, a proxima etapa recomendada eh banco gerenciado (Postgres/Supabase).
+- Em producao, o sistema usa Postgres automaticamente quando `DATABASE_URL` estiver configurada.
+- Em ambiente local sem banco, usa fallback em arquivo `.data/orders.json`.
+- O backend suporta as duas formas sem mudar o frontend.
 
 ## Como rodar localmente
 
@@ -32,6 +32,15 @@ Copie o arquivo `.env.example` para `.env.local` e preencha:
 
 - `OWNER_PANEL_USER`: usuario de acesso da Area do Dono (padrao `dono`)
 - `OWNER_PANEL_PASSWORD`: senha de acesso da Area do Dono
+- `DATABASE_URL`: conexao Postgres para persistencia em producao
+- `ORDERS_DATA_FILE` (opcional): caminho do arquivo local de pedidos
+
+### Setup rapido para banco
+
+1. Crie um banco Postgres (Supabase, Neon, Vercel Postgres, etc.).
+2. Copie a string de conexao para `DATABASE_URL` no Vercel.
+3. Faça redeploy.
+4. O sistema cria a tabela `orders` automaticamente no primeiro uso.
 
 ## Deploy no Vercel
 
