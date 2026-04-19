@@ -28,7 +28,7 @@ export default function CategoryFilter({ active, onChange, counts }: Props) {
           <button
             key={tab.value}
             onClick={() => onChange(tab.value)}
-            className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition-all sm:px-4 sm:py-2 sm:text-sm ${
+            className={`flex min-h-11 shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition-all sm:px-4 sm:py-2 sm:text-sm ${
               isActive
                 ? "bg-yellow-500 text-black shadow-lg shadow-yellow-500/30"
                 : "border border-white/10 bg-white/5 text-zinc-400 hover:border-yellow-500/35 hover:text-white"

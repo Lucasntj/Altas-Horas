@@ -127,11 +127,6 @@ export default function Home() {
       <Header />
 
       <main className="section-shell flex-1 space-y-4 pb-28 sm:space-y-6 sm:pb-10">
-        <DeliveryBanner
-          operatingHours={operatingHoursLabel}
-          forceOpen={Boolean(storeSettings?.forceOpen)}
-        />
-
         {!isStoreOpen && (
           <div className="rounded-2xl border border-yellow-500/45 bg-yellow-500/10 p-4 text-center animate-fade-up">
             <p className="text-sm font-extrabold text-yellow-300">
@@ -192,6 +187,11 @@ export default function Home() {
             />
           </div>
 
+          <DeliveryBanner
+            operatingHours={operatingHoursLabel}
+            forceOpen={Boolean(storeSettings?.forceOpen)}
+          />
+
           {isLoadingProducts ? (
             <div className="rounded-2xl border border-white/10 bg-zinc-900 p-10 text-center text-zinc-500">
               Carregando cardápio...
@@ -213,7 +213,9 @@ export default function Home() {
           )}
         </section>
 
-        <SocialProof />
+        <div className="hidden md:block">
+          <SocialProof />
+        </div>
       </main>
 
       <Footer />

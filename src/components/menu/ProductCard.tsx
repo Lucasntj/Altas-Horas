@@ -2,8 +2,9 @@
 
 import { useCart } from "@/context/CartContext";
 import type { Product } from "@/data/products";
-import { IconPlus } from "@tabler/icons-react";
+import AddToCartButton from "@/components/ui/AddToCartButton";
 import Image from "next/image";
+import { useState } from "react";
 
 interface Props {
   product: Product;
@@ -12,6 +13,7 @@ interface Props {
 
 export default function ProductCard({ product, canOrder = true }: Props) {
   const { addToCart, notify } = useCart();
+  const [justAdded, setJustAdded] = useState(false);
 
   const getShortDescription = (description: string) => {
     const cleaned = description.replace(/\s+/g, " ").trim();
@@ -38,10 +40,12 @@ export default function ProductCard({ product, canOrder = true }: Props) {
     }
 
     addToCart(product);
+    setJustAdded(true);
+    setTimeout(() => setJustAdded(false), 1000);
   };
 
   return (
-    <article className="relative w-full max-w-full overflow-hidden rounded-2xl border border-white/12 bg-zinc-900 p-2.5 transition-all duration-200 hover:border-yellow-500/35 hover:shadow-[0_12px_32px_rgba(234,179,8,0.14)] md:p-3">
+    <article className="relative w-full max-w-full overflow-hidden rounded-2xl border border-white/12 bg-zinc-900/95 p-2.5 shadow-[0_8px_24px_rgba(0,0,0,0.28)] transition-all duration-200 hover:border-yellow-500/35 hover:shadow-[0_12px_32px_rgba(234,179,8,0.14)] md:p-3">
       <div className="mb-2 flex flex-wrap gap-1.5">
         {!product.isAvailable && (
           <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-zinc-900 shadow">
@@ -80,7 +84,7 @@ export default function ProductCard({ product, canOrder = true }: Props) {
           <h3 className="text-[17px] font-extrabold leading-tight text-white md:text-[18px]">
             {product.name}
           </h3>
-          <p className="mt-1 max-w-full text-[12px] leading-snug text-zinc-300 line-clamp-2 md:text-[13px]">
+          <p className="mt-1 max-w-full text-[12px] leading-snug text-zinc-400 line-clamp-2 md:text-[13px]">
             {getShortDescription(product.description)}
           </p>
 
@@ -89,23 +93,14 @@ export default function ProductCard({ product, canOrder = true }: Props) {
               R$ {product.price.toFixed(2)}
             </p>
 
-            <button
+            <AddToCartButton
               onClick={handleAdd}
               disabled={!product.isAvailable || !canOrder}
-              className="flex min-h-10 items-center gap-1.5 rounded-[10px] bg-yellow-500 px-[14px] py-[10px] text-xs font-bold text-black shadow-md shadow-yellow-500/30 transition-all hover:bg-yellow-400 active:scale-95 disabled:cursor-not-allowed disabled:bg-zinc-500 disabled:text-zinc-900 disabled:shadow-none"
-              aria-label={
-                product.isAvailable
-                  ? `Adicionar ${product.name} ao carrinho`
-                  : `${product.name} indisponível`
-              }
-            >
-              <IconPlus size={15} stroke={2.5} />
-              {!canOrder
-                ? "Fechada"
-                : product.isAvailable
-                  ? "Adicionar"
-                  : "Indisponível"}
-            </button>
+              justAdded={justAdded}
+              closedStore={!canOrder}
+              unavailable={!product.isAvailable}
+              className="text-xs"
+            />
           </div>
         </div>
       </div>

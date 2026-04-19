@@ -8,7 +8,7 @@ const Header = () => {
   const { totalItems, openCart } = useCart();
 
   return (
-    <header className="relative mb-2 overflow-hidden sm:mb-4 lg:mb-6">
+    <header className="sticky top-0 z-30 relative mb-2 overflow-hidden border-b border-white/10 bg-black/90 backdrop-blur-md sm:mb-4 lg:mb-6">
       <div
         className="absolute inset-0"
         style={{
@@ -17,9 +17,9 @@ const Header = () => {
           backgroundPosition: "center",
         }}
       />
-      <div className="absolute inset-0 bg-gradient-to-br from-[#040404]/98 via-[#151515]/94 to-[#040404]/98" />
+      <div className="absolute inset-0 bg-gradient-to-br from-[#040404]/97 via-[#131313]/92 to-[#040404]/96" />
 
-      <div className="section-shell relative animate-fade-up pt-2.5 pb-3 sm:pt-3 sm:pb-4 md:pt-5 md:pb-7 lg:pt-7 lg:pb-10">
+      <div className="section-shell relative animate-fade-up pt-2 pb-2.5 sm:pt-3 sm:pb-4 md:pt-4 md:pb-5 lg:pt-5 lg:pb-6">
         {/* Barra superior: badge de status + botão carrinho */}
         <div className="flex items-center justify-between gap-3">
           <div className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-white backdrop-blur-sm sm:text-xs sm:tracking-[0.14em]">
@@ -30,7 +30,7 @@ const Header = () => {
 
           <button
             onClick={openCart}
-            className="relative flex items-center gap-2 rounded-2xl border border-yellow-300/60 bg-yellow-500/20 px-3 py-2 text-xs font-bold text-white backdrop-blur-sm transition-all hover:bg-yellow-500/80 sm:px-4 sm:text-sm"
+            className="relative flex min-h-11 items-center gap-2 rounded-2xl border border-yellow-300/60 bg-yellow-500/20 px-3 py-2 text-xs font-bold text-white backdrop-blur-sm transition-all hover:bg-yellow-500/80 sm:px-4 sm:text-sm"
             aria-label="Abrir carrinho"
           >
             <IconShoppingBag size={18} stroke={2} />
@@ -44,22 +44,22 @@ const Header = () => {
         </div>
 
         {/* Logo e nome */}
-        <div className="mt-2.5 flex items-center gap-2 rounded-2xl border border-white/15 bg-black/65 p-2 backdrop-blur-md sm:mt-3 sm:gap-3 sm:p-2.5 md:mt-4 md:gap-4 md:p-3">
-          <div className="rounded-2xl border border-white/30 bg-white/15 p-2 backdrop-blur-sm shadow-2xl">
+        <div className="mt-2 flex items-center gap-2 rounded-2xl border border-white/15 bg-black/70 p-2 backdrop-blur-md sm:mt-3 sm:gap-3 sm:p-2.5 md:mt-3 md:gap-4 md:p-3">
+          <div className="rounded-xl border border-white/25 bg-white/10 p-1.5 backdrop-blur-sm shadow-xl">
             <Image
               src="/Logoaltas.png"
               alt="Logo Altas Horas"
               width={110}
               height={110}
-              className="h-[48px] w-[48px] rounded-xl object-cover sm:h-[62px] sm:w-[62px] md:h-[72px] md:w-[72px] lg:h-[96px] lg:w-[96px]"
+              className="h-[40px] w-[40px] rounded-lg object-cover sm:h-[54px] sm:w-[54px] md:h-[62px] md:w-[62px] lg:h-[76px] lg:w-[76px]"
             />
           </div>
           <div className="min-w-0">
-            <h1 className="font-[family-name:var(--font-display)] text-[20px] leading-none tracking-[0.03em] text-white drop-shadow-md sm:text-[26px] md:text-[34px] lg:text-5xl">
+            <h1 className="font-[family-name:var(--font-display)] text-[18px] leading-none tracking-[0.03em] text-white drop-shadow-md sm:text-[24px] md:text-[30px] lg:text-4xl">
               ALTAS HORAS
             </h1>
-            <p className="mt-1 line-clamp-2 text-[13px] font-semibold leading-tight text-zinc-100 sm:text-[14px] md:text-[15px] lg:text-base">
-              Sabor rápido, atendimento profissional, pedido sem complicação.
+            <p className="mt-1 line-clamp-1 text-[12px] font-medium leading-tight text-zinc-200 sm:text-[13px] md:text-[14px] lg:text-[15px]">
+              Pedido rapido e sem complicacao.
             </p>
           </div>
         </div>
