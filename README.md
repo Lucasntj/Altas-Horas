@@ -34,6 +34,9 @@ Copie o arquivo `.env.example` para `.env.local` e preencha:
 - `OWNER_PANEL_PASSWORD`: senha de acesso da Area do Dono
 - `DATABASE_URL`: conexao Postgres para persistencia em producao
 - `ORDERS_DATA_FILE` (opcional): caminho do arquivo local de pedidos
+- `PRODUCTS_DATA_FILE` (opcional): caminho do arquivo local da disponibilidade dos produtos
+- `PRODUCTS_EDITS_FILE` (opcional): caminho do arquivo local das edicoes dos produtos
+- `STORE_SETTINGS_FILE` (opcional): caminho do arquivo local das configuracoes de horario da loja
 
 ### Setup rapido para banco
 
@@ -41,6 +44,20 @@ Copie o arquivo `.env.example` para `.env.local` e preencha:
 2. Copie a string de conexao para `DATABASE_URL` no Vercel.
 3. Faça redeploy.
 4. O sistema cria a tabela `orders` automaticamente no primeiro uso.
+
+## Render em producao
+
+Para nao perder transacoes nem configuracoes ao reiniciar o servico, confirme no Render:
+
+- `ORDERS_DATA_FILE=/var/data/orders.json`
+- `PRODUCTS_DATA_FILE=/var/data/products-availability.json`
+- `PRODUCTS_EDITS_FILE=/var/data/products-edits.json`
+- `STORE_SETTINGS_FILE=/var/data/store-settings.json`
+- Disco persistente montado em `/var/data`
+
+Se quiser historico mais robusto e sem depender de arquivo, configure tambem:
+
+- `DATABASE_URL=<sua conexao postgres>`
 
 ## Deploy no Vercel
 

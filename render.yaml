@@ -1,0 +1,33 @@
+services:
+  - type: web
+    name: altas-horas-catalogo
+    runtime: node
+    rootDir: .
+    plan: starter
+    autoDeploy: true
+    buildCommand: npm install && npm run build
+    startCommand: npm run start
+    healthCheckPath: /
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: NEXT_TELEMETRY_DISABLED
+        value: "1"
+      - key: STORE_TIMEZONE
+        value: America/Sao_Paulo
+      - key: STORE_OPEN_HOUR
+        value: "18"
+      - key: STORE_CLOSE_HOUR
+        value: "2"
+      - key: ORDERS_DATA_FILE
+        value: /var/data/orders.json
+      - key: PRODUCTS_DATA_FILE
+        value: /var/data/products-availability.json
+      - key: PRODUCTS_EDITS_FILE
+        value: /var/data/products-edits.json
+      - key: STORE_SETTINGS_FILE
+        value: /var/data/store-settings.json
+    disks:
+      - name: altas-horas-data
+        mountPath: /var/data
+        sizeGB: 1
