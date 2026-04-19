@@ -1,19 +1,10 @@
 import { NextResponse } from "next/server";
-
-interface OrderItem {
-  id: number;
-  name: string;
-  price: number;
-  quantity: number;
-}
-
-interface OrderCustomer {
-  name: string;
-  phone: string;
-  address: string;
-  paymentMethod: string;
-  notes?: string;
-}
+import {
+  addOrder,
+  listOrders,
+  type OrderCustomer,
+  type OrderItem,
+} from "@/lib/orders-store";
 
 interface OrderPayload {
   customer: OrderCustomer;
@@ -27,35 +18,6 @@ const normalizePhone = (phone: string): string => {
 };
 
 const formatCurrency = (value: number): string => `R$ ${value.toFixed(2)}`;
-
-const buildOwnerMessage = (
-  orderId: string,
-  customer: OrderCustomer,
-  items: OrderItem[],
-  totalValue: number,
-): string => {
-  const itemsText = items
-    .map(
-      (item) =>
-        `- ${item.quantity}x ${item.name} (${formatCurrency(item.price * item.quantity)})`,
-    )
-    .join("\n");
-
-  return [
-    `*Novo Pedido* #${orderId}`,
-    "",
-    `Cliente: ${customer.name}`,
-    `WhatsApp: ${customer.phone}`,
-    `Endereco: ${customer.address}`,
-    `Pagamento: ${customer.paymentMethod}`,
-    customer.notes ? `Observacoes: ${customer.notes}` : "Observacoes: -",
-    "",
-    "Itens:",
-    itemsText,
-    "",
-    `Total: ${formatCurrency(totalValue)}`,
-  ].join("\n");
-};
 
 const buildCustomerMessage = (
   orderId: string,
@@ -128,18 +90,6 @@ export async function POST(request: Request) {
       );
     }
 
-    const ownerPhoneRaw = process.env.WHATSAPP_OWNER_NUMBER;
-    if (!ownerPhoneRaw) {
-      return NextResponse.json(
-        {
-          success: false,
-          message:
-            "WhatsApp da lanchonete nao configurado. Defina WHATSAPP_OWNER_NUMBER no ambiente.",
-        },
-        { status: 500 },
-      );
-    }
-
     const orderId = `${Date.now().toString().slice(-6)}${Math.floor(Math.random() * 90 + 10)}`;
     const totalValue = items.reduce(
       (acc, item) => acc + Number(item.price) * Number(item.quantity),
@@ -147,28 +97,26 @@ export async function POST(request: Request) {
     );
 
     const customerPhone = normalizePhone(customer.phone);
-    const ownerPhone = normalizePhone(ownerPhoneRaw);
+    const customerMessage = buildCustomerMessage(orderId, customer, totalValue);
+    const customerWhatsAppUrl = `https://wa.me/${customerPhone}?text=${encodeURIComponent(customerMessage)}`;
 
-    const ownerMessage = buildOwnerMessage(
+    addOrder({
       orderId,
+      createdAt: new Date().toISOString(),
       customer,
       items,
       totalValue,
-    );
-    const customerMessage = buildCustomerMessage(orderId, customer, totalValue);
-
-    const ownerWhatsAppUrl = `https://wa.me/${ownerPhone}?text=${encodeURIComponent(ownerMessage)}`;
-    const customerWhatsAppUrl = `https://wa.me/${customerPhone}?text=${encodeURIComponent(customerMessage)}`;
+      status: "novo",
+    });
 
     try {
-      await sendWhatsAppText(ownerPhone, ownerMessage);
       await sendWhatsAppText(customerPhone, customerMessage);
 
       return NextResponse.json({
         success: true,
         orderId,
         message:
-          "Pedido enviado para a lanchonete e confirmacao enviada para o WhatsApp do cliente.",
+          "Pedido recebido e confirmacao enviada para o WhatsApp do cliente.",
       });
     } catch (error) {
       const isMissingConfig =
@@ -180,8 +128,7 @@ export async function POST(request: Request) {
           success: true,
           orderId,
           message:
-            "Pedido gerado. Configure a API do WhatsApp para envio automatico ou use os links abaixo.",
-          ownerWhatsAppUrl,
+            "Pedido recebido. Configure a API do WhatsApp para confirmar automaticamente ao cliente.",
           customerWhatsAppUrl,
         });
       }
@@ -190,8 +137,7 @@ export async function POST(request: Request) {
         success: true,
         orderId,
         message:
-          "Pedido gerado. Nao foi possivel enviar automaticamente. Use os links de WhatsApp abaixo.",
-        ownerWhatsAppUrl,
+          "Pedido recebido. Nao foi possivel enviar a confirmacao automaticamente. Use o link de WhatsApp abaixo.",
         customerWhatsAppUrl,
       });
     }
@@ -201,4 +147,11 @@ export async function POST(request: Request) {
       { status: 500 },
     );
   }
+}
+
+export async function GET() {
+  return NextResponse.json({
+    success: true,
+    orders: listOrders(),
+  });
 }

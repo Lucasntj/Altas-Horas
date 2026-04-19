@@ -27,7 +27,6 @@ interface CheckoutResponse {
   success: boolean;
   orderId?: string;
   message?: string;
-  ownerWhatsAppUrl?: string;
   customerWhatsAppUrl?: string;
 }
 
@@ -282,17 +281,6 @@ export default function Cart() {
                   </p>
                   {checkoutResult.message && <p>{checkoutResult.message}</p>}
 
-                  {checkoutResult.ownerWhatsAppUrl && (
-                    <a
-                      href={checkoutResult.ownerWhatsAppUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="underline font-semibold block mt-2"
-                    >
-                      Enviar pedido para o WhatsApp da lanchonete
-                    </a>
-                  )}
-
                   {checkoutResult.customerWhatsAppUrl && (
                     <a
                       href={checkoutResult.customerWhatsAppUrl}
@@ -300,7 +288,7 @@ export default function Cart() {
                       rel="noreferrer"
                       className="underline font-semibold block mt-1"
                     >
-                      Enviar confirmacao para seu WhatsApp
+                      Enviar confirmacao para o WhatsApp do cliente
                     </a>
                   )}
                 </div>
