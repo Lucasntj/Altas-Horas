@@ -23,6 +23,7 @@ body {
   background: #111111;
   font-family: var(--font-body), "Segoe UI", sans-serif;
   min-height: 100vh;
+  overflow-x: hidden;
 }
 
 a,
@@ -64,7 +65,7 @@ textarea {
 
 @layer components {
   .section-shell {
-    @apply max-w-6xl mx-auto px-4;
+    @apply max-w-6xl mx-auto px-3 sm:px-4;
   }
 
   .surface-panel {

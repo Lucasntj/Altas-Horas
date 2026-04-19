@@ -119,7 +119,7 @@ export default function Home() {
     <div className="min-h-screen flex flex-col">
       <Header />
 
-      <main className="section-shell flex-1 pb-10 space-y-6">
+      <main className="section-shell flex-1 space-y-6 pb-28 sm:pb-10">
         <DeliveryBanner />
 
         {!isStoreOpen && (
@@ -145,7 +145,7 @@ export default function Home() {
               <p className="text-xs font-extrabold uppercase tracking-widest text-yellow-500">
                 Destaques
               </p>
-              <h2 className="mt-0.5 text-2xl font-extrabold text-white">
+              <h2 className="mt-0.5 text-[2rem] leading-none font-extrabold text-white sm:text-2xl">
                 Os favoritos da casa 🔥
               </h2>
             </div>
@@ -166,10 +166,10 @@ export default function Home() {
             <p className="text-xs font-extrabold uppercase tracking-widest text-yellow-500">
               Cardápio
             </p>
-            <h2 className="mt-0.5 text-2xl font-extrabold text-white">
+            <h2 className="mt-0.5 text-[2rem] leading-none font-extrabold text-white sm:text-2xl">
               Monte seu pedido
             </h2>
-            <p className="mt-1 text-xs text-zinc-500">
+            <p className="mt-1 text-sm text-zinc-400 sm:text-xs sm:text-zinc-500">
               As fotos dos produtos são meramente ilustrativas.
             </p>
           </div>

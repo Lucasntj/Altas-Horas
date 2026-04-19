@@ -17,7 +17,7 @@ const Header = () => {
           backgroundPosition: "center",
         }}
       />
-      <div className="absolute inset-0 bg-gradient-to-br from-[#0b0b0b]/92 via-[#2a2106]/76 to-[#090909]/90" />
+      <div className="absolute inset-0 bg-gradient-to-br from-[#070707]/95 via-[#1e1804]/86 to-[#050505]/94" />
 
       <div className="section-shell relative animate-fade-up pt-4 pb-7 md:pt-7 md:pb-11">
         {/* Barra superior: badge de status + botão carrinho */}
@@ -43,7 +43,7 @@ const Header = () => {
         </div>
 
         {/* Logo e nome */}
-        <div className="mt-4 flex items-center gap-3 sm:mt-5 sm:gap-4">
+        <div className="mt-4 flex items-center gap-3 rounded-2xl border border-white/10 bg-black/45 p-2.5 backdrop-blur-[2px] sm:mt-5 sm:gap-4 sm:p-3">
           <div className="rounded-2xl border border-white/30 bg-white/15 p-2 backdrop-blur-sm shadow-2xl">
             <Image
               src="/Logoaltas.png"
@@ -54,10 +54,10 @@ const Header = () => {
             />
           </div>
           <div className="min-w-0">
-            <h1 className="font-[family-name:var(--font-display)] text-[2rem] leading-[0.95] tracking-[0.03em] text-white drop-shadow-md sm:text-5xl md:text-6xl">
+            <h1 className="font-[family-name:var(--font-display)] text-[2.15rem] leading-[0.95] tracking-[0.03em] text-white drop-shadow-md sm:text-5xl md:text-6xl">
               ALTAS HORAS
             </h1>
-            <p className="mt-1 text-xs font-semibold text-yellow-200 sm:text-sm md:text-base">
+            <p className="mt-1 text-sm font-semibold text-zinc-100 sm:text-sm md:text-base">
               Sabor rápido, atendimento profissional, pedido sem complicação.
             </p>
           </div>

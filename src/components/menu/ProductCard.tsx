@@ -30,7 +30,7 @@ export default function ProductCard({ product, canOrder = true }: Props) {
   };
 
   return (
-    <article className="group relative flex flex-col overflow-hidden rounded-2xl border border-white/8 bg-zinc-900 transition-all duration-200 hover:-translate-y-1 hover:border-yellow-500/35 hover:shadow-[0_12px_40px_rgba(234,179,8,0.16)]">
+    <article className="group relative flex flex-col overflow-hidden rounded-2xl border border-white/12 bg-zinc-900 transition-all duration-200 hover:-translate-y-1 hover:border-yellow-500/35 hover:shadow-[0_12px_40px_rgba(234,179,8,0.16)]">
       {/* Badges */}
       <div className="absolute left-3 top-3 z-10 flex gap-1.5">
         {!product.isAvailable && (
@@ -52,7 +52,7 @@ export default function ProductCard({ product, canOrder = true }: Props) {
       </div>
 
       {/* Imagem */}
-      <div className="relative h-48 w-full overflow-hidden bg-zinc-800">
+      <div className="relative h-52 w-full overflow-hidden bg-zinc-800 sm:h-48">
         <Image
           src={product.image}
           alt={product.name}
@@ -67,15 +67,15 @@ export default function ProductCard({ product, canOrder = true }: Props) {
 
       {/* Conteúdo */}
       <div className="flex flex-1 flex-col p-4">
-        <h3 className="text-[17px] font-extrabold text-white">
+        <h3 className="text-[1.75rem] leading-none font-extrabold text-white sm:text-[17px]">
           {product.name}
         </h3>
-        <p className="mt-1 flex-1 text-sm leading-relaxed text-zinc-400">
+        <p className="mt-1.5 flex-1 text-[15px] leading-snug text-zinc-200 line-clamp-3 sm:text-sm sm:text-zinc-400">
           {product.description}
         </p>
 
         <div className="mt-4 flex items-center justify-between gap-2">
-          <span className="text-xl font-extrabold text-yellow-400">
+          <span className="text-[2rem] leading-none font-extrabold text-yellow-400 sm:text-xl">
             R$ {product.price.toFixed(2)}
           </span>
           <button
