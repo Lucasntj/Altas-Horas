@@ -281,7 +281,8 @@ export default function CartPage() {
               {lastOrder.whatsappSent === false && (
                 <p className="mt-3 rounded-xl border border-yellow-500/40 bg-yellow-500/10 px-3 py-2 text-xs font-semibold text-yellow-200">
                   Pedido salvo com sucesso, mas a confirmação automática no
-                  WhatsApp do cliente falhou. Motivo: {lastOrder.whatsappReason || "não informado"}.
+                  WhatsApp do cliente falhou. Motivo:{" "}
+                  {lastOrder.whatsappReason || "não informado"}.
                 </p>
               )}
             </div>

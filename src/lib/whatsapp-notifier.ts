@@ -66,16 +66,16 @@ const buildConfirmationMessage = (order: StoredOrder) => {
   const lines = [
     `Olá, ${order.customer.name}!`,
     "",
-    `Seu pedido na *${STORE_NAME}* foi confirmado com sucesso.`,
-    `Pedido: *#${order.orderId}*`,
+    `Seu pedido na *${STORE_NAME}* foi recebido e confirmado com sucesso.`,
+    `Número do pedido: *#${order.orderId}*`,
     `Status atual: *${statusLabel[order.status]}*`,
     "",
-    "Resumo do pedido:",
+    "*Resumo do pedido:*",
     buildOrderItemsSummary(order),
     "",
     `Total: *${formatCurrency(order.totalValue)}*`,
     `Pagamento: *${order.customer.paymentMethod}*`,
-    `Entrega/retirada: *${order.customer.address}*`,
+    `Endereço de entrega/retirada: *${order.customer.address}*`,
   ];
 
   if (order.customer.notes?.trim()) {
@@ -84,6 +84,7 @@ const buildConfirmationMessage = (order: StoredOrder) => {
 
   lines.push(
     "",
+    "Obrigado pela preferência.",
     "Vamos te atualizando por aqui conforme o andamento do pedido.",
   );
 
@@ -99,16 +100,22 @@ const buildStatusUpdateMessage = (order: StoredOrder) => {
   ];
 
   if (order.status === "preparing") {
-    lines.push("Seu pedido já entrou em preparo.");
+    lines.push("Seu pedido já entrou em preparo na cozinha.");
   }
 
   if (order.status === "delivering") {
-    lines.push("Seu pedido saiu para entrega.");
+    lines.push("Seu pedido saiu para entrega. Fique atento ao telefone.");
   }
 
   if (order.status === "completed") {
     lines.push("Seu pedido foi finalizado. Obrigado pela preferência!");
   }
+
+  if (order.status === "received") {
+    lines.push("Seu pedido entrou na fila e será iniciado em breve.");
+  }
+
+  lines.push("Se precisar de ajuda, responda esta mensagem.");
 
   return lines.join("\n");
 };
@@ -124,17 +131,14 @@ const sendViaZApi = async (phone: string, message: string) => {
 
   const endpoint = `${ZAPI_BASE_URL.replace(/\/$/, "")}/instances/${ZAPI_INSTANCE_ID}/token/${ZAPI_INSTANCE_TOKEN}/send-text`;
 
-  const response = await fetch(
-    endpoint,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(ZAPI_CLIENT_TOKEN ? { "Client-Token": ZAPI_CLIENT_TOKEN } : {}),
-      },
-      body: JSON.stringify({ phone, message }),
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(ZAPI_CLIENT_TOKEN ? { "Client-Token": ZAPI_CLIENT_TOKEN } : {}),
     },
-  );
+    body: JSON.stringify({ phone, message }),
+  });
 
   const responseText = await response.text();
 

@@ -67,19 +67,21 @@ export default function ProductCard({ product, canOrder = true }: Props) {
 
       {/* Conteúdo */}
       <div className="flex flex-1 flex-col p-4">
-        <h3 className="text-base font-extrabold text-white">{product.name}</h3>
+        <h3 className="text-[17px] font-extrabold text-white">
+          {product.name}
+        </h3>
         <p className="mt-1 flex-1 text-sm leading-relaxed text-zinc-400">
           {product.description}
         </p>
 
-        <div className="mt-4 flex items-center justify-between gap-3">
+        <div className="mt-4 flex items-center justify-between gap-2">
           <span className="text-xl font-extrabold text-yellow-400">
             R$ {product.price.toFixed(2)}
           </span>
           <button
             onClick={handleAdd}
             disabled={!product.isAvailable || !canOrder}
-            className="flex items-center gap-1.5 rounded-xl bg-yellow-500 px-4 py-2.5 text-sm font-bold text-black shadow-md shadow-yellow-500/25 transition-all hover:bg-yellow-400 active:scale-95 disabled:cursor-not-allowed disabled:bg-zinc-500 disabled:text-zinc-900 disabled:shadow-none"
+            className="flex min-h-10 items-center gap-1.5 rounded-xl bg-yellow-500 px-3 py-2.5 text-sm font-bold text-black shadow-md shadow-yellow-500/25 transition-all hover:bg-yellow-400 active:scale-95 disabled:cursor-not-allowed disabled:bg-zinc-500 disabled:text-zinc-900 disabled:shadow-none sm:px-4"
             aria-label={
               product.isAvailable
                 ? `Adicionar ${product.name} ao carrinho`
