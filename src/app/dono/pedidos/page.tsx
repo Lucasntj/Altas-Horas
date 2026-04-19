@@ -60,10 +60,32 @@ export default function OwnerOrdersPage() {
   const [orders, setOrders] = useState<StoredOrder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdatingOrder, setIsUpdatingOrder] = useState<string | null>(null);
+  const [selectedStatusByOrder, setSelectedStatusByOrder] = useState<
+    Record<string, OrderStatus>
+  >({});
+  const [lastUpdatedOrderId, setLastUpdatedOrderId] = useState<string | null>(
+    null,
+  );
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<"todos" | OrderStatus>(
     "todos",
   );
+
+  const statusLabelMap: Record<OrderStatus, string> = {
+    novo: "Novo",
+    em_preparo: "Em preparo",
+    saiu_para_entrega: "Saiu para entrega",
+    finalizado: "Finalizado",
+    cancelado: "Cancelado",
+  };
+
+  const statusBadgeMap: Record<OrderStatus, string> = {
+    novo: "bg-blue-50 text-blue-700 border-blue-200",
+    em_preparo: "bg-amber-50 text-amber-700 border-amber-200",
+    saiu_para_entrega: "bg-indigo-50 text-indigo-700 border-indigo-200",
+    finalizado: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    cancelado: "bg-rose-50 text-rose-700 border-rose-200",
+  };
 
   const fetchOrders = useCallback(async (): Promise<StoredOrder[]> => {
     const params = new URLSearchParams();
@@ -103,6 +125,12 @@ export default function OwnerOrdersPage() {
       });
 
       await loadOrders();
+      setLastUpdatedOrderId(orderId);
+      setTimeout(() => {
+        setLastUpdatedOrderId((current) =>
+          current === orderId ? null : current,
+        );
+      }, 2500);
     } finally {
       setIsUpdatingOrder(null);
     }
@@ -236,7 +264,10 @@ export default function OwnerOrdersPage() {
 
         <div className="surface-panel p-3 mb-5">
           <p className="text-sm font-semibold text-zinc-800">
-            Filtro ativo: {statusFilter === "todos" ? "todos" : statusFilter}
+            Filtro ativo:{" "}
+            {statusFilter === "todos"
+              ? "Todos os status"
+              : statusLabelMap[statusFilter]}
           </p>
         </div>
 
@@ -256,32 +287,60 @@ export default function OwnerOrdersPage() {
                   <h2 className="text-lg font-extrabold text-zinc-900">
                     Pedido #{order.orderId}
                   </h2>
-                  <span className="text-sm font-semibold text-zinc-600">
-                    {formatDate(order.createdAt)}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`rounded-full border px-2.5 py-1 text-xs font-bold ${statusBadgeMap[order.status]}`}
+                    >
+                      {statusLabelMap[order.status]}
+                    </span>
+                    <span className="text-sm font-semibold text-zinc-600">
+                      {formatDate(order.createdAt)}
+                    </span>
+                  </div>
                 </div>
 
-                <div className="mt-2 flex items-center gap-2">
-                  <span className="text-sm font-bold text-zinc-700">
-                    Status:
-                  </span>
-                  <select
-                    value={order.status}
-                    disabled={isUpdatingOrder === order.orderId}
-                    onChange={(event) =>
-                      void updateOrderStatus(
-                        order.orderId,
-                        event.target.value as OrderStatus,
-                      )
-                    }
-                    className="field-base max-w-[220px] py-1.5"
-                  >
-                    {statusOptions.map((status) => (
-                      <option key={status.value} value={status.value}>
-                        {status.label}
-                      </option>
-                    ))}
-                  </select>
+                <div className="mt-3 rounded-xl border border-[#ecd8c0] bg-[#fffdf9] p-3">
+                  <p className="text-sm font-bold text-zinc-800 mb-2">
+                    Status deste pedido
+                  </p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <select
+                      value={selectedStatusByOrder[order.orderId] ?? order.status}
+                      disabled={isUpdatingOrder === order.orderId}
+                      onChange={(event) =>
+                        setSelectedStatusByOrder((current) => ({
+                          ...current,
+                          [order.orderId]: event.target.value as OrderStatus,
+                        }))
+                      }
+                      className="field-base max-w-[220px] py-1.5"
+                    >
+                      {statusOptions.map((status) => (
+                        <option key={status.value} value={status.value}>
+                          {status.label}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      onClick={() =>
+                        void updateOrderStatus(
+                          order.orderId,
+                          selectedStatusByOrder[order.orderId] ?? order.status,
+                        )
+                      }
+                      disabled={isUpdatingOrder === order.orderId}
+                      className="rounded-lg bg-[#0f766e] px-3 py-2 text-xs font-bold text-white hover:bg-[#0a5f59] disabled:bg-zinc-400"
+                    >
+                      {isUpdatingOrder === order.orderId
+                        ? "Salvando..."
+                        : "Salvar status"}
+                    </button>
+                  </div>
+                  {lastUpdatedOrderId === order.orderId && (
+                    <p className="mt-2 text-xs font-semibold text-emerald-700">
+                      Status atualizado com sucesso.
+                    </p>
+                  )}
                 </div>
 
                 <p className="mt-2 text-sm text-zinc-700">
