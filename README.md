@@ -1,36 +1,46 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Catalogo Altas Horas
 
-## Getting Started
+Aplicacao Next.js para cardapio e fechamento de pedidos da lanchonete.
 
-First, run the development server:
+## Funcionalidades
+
+- Cardapio com itens e carrinho
+- Checkout com dados do cliente
+- Envio de pedido para o dono da lanchonete
+- Envio de confirmacao para o WhatsApp do cliente
+
+## Como rodar localmente
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Abra http://localhost:3000.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Variaveis de ambiente
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Copie o arquivo `.env.example` para `.env.local` e preencha:
 
-## Learn More
+- `WHATSAPP_OWNER_NUMBER`: numero do dono (com DDI, ex.: 5511999998888)
+- `WHATSAPP_ACCESS_TOKEN`: token da API WhatsApp Cloud (Meta)
+- `WHATSAPP_PHONE_NUMBER_ID`: Phone Number ID da conta WhatsApp Cloud
+- `WHATSAPP_API_VERSION`: opcional (padrao `v21.0`)
 
-To learn more about Next.js, take a look at the following resources:
+### Sem API configurada
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Se `WHATSAPP_ACCESS_TOKEN` e `WHATSAPP_PHONE_NUMBER_ID` nao estiverem definidos, o sistema ainda cria o pedido e retorna links `wa.me` para envio manual.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Deploy no Vercel
 
-## Deploy on Vercel
+1. Conecte o repositorio no Vercel
+2. Configure as variaveis de ambiente acima em Settings > Environment Variables
+3. Faça deploy
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Fluxo de pedido
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Cliente adiciona itens ao carrinho
+2. Cliente informa nome, WhatsApp e endereco
+3. Sistema envia pedido para o dono
+4. Sistema envia confirmacao para o WhatsApp do cliente
+
