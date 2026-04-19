@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Bebas_Neue, Manrope } from "next/font/google";
 import { CartProvider } from "@/context/CartContext";
 import CartSidebar from "@/components/cart/CartSidebar";
+import CartButton from "@/components/CartButton";
 import Toaster from "@/components/ui/Toaster";
 import FloatingWhatsAppButton from "@/components/ui/FloatingWhatsAppButton";
 import "./globals.css";
@@ -33,6 +34,7 @@ export default function RootLayout({
         <CartProvider>
           {children}
           <CartSidebar />
+          <CartButton />
           <Toaster />
           <FloatingWhatsAppButton />
         </CartProvider>

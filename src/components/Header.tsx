@@ -29,11 +29,11 @@ const Header = () => {
 
           <button
             onClick={openCart}
-            className="relative flex items-center gap-2 rounded-2xl border border-white/20 bg-white/10 px-3 py-2 text-sm font-bold text-white backdrop-blur-sm transition-all hover:bg-yellow-500/80 sm:px-4"
+            className="relative flex items-center gap-2 rounded-2xl border border-yellow-300/60 bg-yellow-500/20 px-3 py-2 text-sm font-bold text-white backdrop-blur-sm transition-all hover:bg-yellow-500/80 sm:px-4"
             aria-label="Abrir carrinho"
           >
             <IconShoppingBag size={18} stroke={2} />
-            <span className="hidden sm:inline">Carrinho</span>
+            <span className="inline">Carrinho</span>
             {totalItems > 0 && (
               <span className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-yellow-500 text-[10px] font-black text-black shadow-lg">
                 {totalItems}
