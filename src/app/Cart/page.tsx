@@ -27,7 +27,6 @@ interface CheckoutResponse {
   success: boolean;
   orderId?: string;
   message?: string;
-  customerWhatsAppUrl?: string;
 }
 
 const getInitialCart = (): CartItem[] => {
@@ -227,7 +226,7 @@ export default function Cart() {
                 />
                 <input
                   type="tel"
-                  placeholder="WhatsApp (com DDD)"
+                  placeholder="Telefone para contato (com DDD)"
                   value={form.customerPhone}
                   onChange={handleInputChange("customerPhone")}
                   className="field-base"
@@ -280,17 +279,6 @@ export default function Cart() {
                       : "Falha ao enviar pedido"}
                   </p>
                   {checkoutResult.message && <p>{checkoutResult.message}</p>}
-
-                  {checkoutResult.customerWhatsAppUrl && (
-                    <a
-                      href={checkoutResult.customerWhatsAppUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="underline font-semibold block mt-1"
-                    >
-                      Enviar confirmacao para o WhatsApp do cliente
-                    </a>
-                  )}
                 </div>
               )}
             </div>

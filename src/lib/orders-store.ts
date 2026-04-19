@@ -13,13 +13,20 @@ export interface OrderCustomer {
   notes?: string;
 }
 
+export type OrderStatus =
+  | "novo"
+  | "em_preparo"
+  | "saiu_para_entrega"
+  | "finalizado"
+  | "cancelado";
+
 export interface StoredOrder {
   orderId: string;
   createdAt: string;
   customer: OrderCustomer;
   items: OrderItem[];
   totalValue: number;
-  status: "novo";
+  status: OrderStatus;
 }
 
 const MAX_ORDERS = 200;
@@ -35,4 +42,15 @@ export const addOrder = (order: StoredOrder) => {
 
 export const listOrders = (): StoredOrder[] => {
   return ordersStore;
+};
+
+export const updateOrderStatus = (
+  orderId: string,
+  status: OrderStatus,
+): StoredOrder | null => {
+  const order = ordersStore.find((item) => item.orderId === orderId);
+  if (!order) return null;
+
+  order.status = status;
+  return order;
 };

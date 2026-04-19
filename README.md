@@ -6,8 +6,8 @@ Aplicacao Next.js para cardapio e fechamento de pedidos da lanchonete.
 
 - Cardapio com itens e carrinho
 - Checkout com dados do cliente
-- Envio de pedido para o dono da lanchonete
-- Envio de confirmacao para o WhatsApp do cliente
+- Registro de pedidos para operacao da lanchonete
+- Area do dono com acompanhamento e atualizacao de status
 
 ## Como rodar localmente
 
@@ -22,16 +22,8 @@ Abra http://localhost:3000.
 
 Copie o arquivo `.env.example` para `.env.local` e preencha:
 
-- `WHATSAPP_OWNER_NUMBER`: numero do dono (com DDI, ex.: 5511999998888)
-- `WHATSAPP_ACCESS_TOKEN`: token da API WhatsApp Cloud (Meta)
-- `WHATSAPP_PHONE_NUMBER_ID`: Phone Number ID da conta WhatsApp Cloud
-- `WHATSAPP_API_VERSION`: opcional (padrao `v21.0`)
 - `OWNER_PANEL_USER`: usuario de acesso da Area do Dono (padrao `dono`)
 - `OWNER_PANEL_PASSWORD`: senha de acesso da Area do Dono
-
-### Sem API configurada
-
-Se `WHATSAPP_ACCESS_TOKEN` e `WHATSAPP_PHONE_NUMBER_ID` nao estiverem definidos, o sistema ainda cria o pedido e retorna links `wa.me` para envio manual.
 
 ## Deploy no Vercel
 
@@ -42,9 +34,14 @@ Se `WHATSAPP_ACCESS_TOKEN` e `WHATSAPP_PHONE_NUMBER_ID` nao estiverem definidos,
 ## Fluxo de pedido
 
 1. Cliente adiciona itens ao carrinho
-2. Cliente informa nome, WhatsApp e endereco
-3. Sistema envia pedido para o dono
-4. Sistema envia confirmacao para o WhatsApp do cliente
+2. Cliente informa nome, telefone e endereco
+3. Sistema registra pedido como `novo`
+4. Dono acompanha na rota `/dono/pedidos` e atualiza status
+
+## Proximas integracoes
+
+- Integracao com WhatsApp (fase futura)
+- Integracao com pagamento online (fase futura)
 
 ## Area do dono protegida
 

@@ -40,9 +40,10 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   const isOwnerRoute = pathname.startsWith("/dono/");
-  const isOrdersGet = pathname === "/api/orders" && request.method === "GET";
+  const isOrdersManagement =
+    pathname === "/api/orders" && request.method !== "POST";
 
-  if (!isOwnerRoute && !isOrdersGet) {
+  if (!isOwnerRoute && !isOrdersManagement) {
     return NextResponse.next();
   }
 

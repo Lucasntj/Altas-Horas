@@ -26,13 +26,28 @@ interface StoredOrder {
   customer: OrderCustomer;
   items: OrderItem[];
   totalValue: number;
-  status: "novo";
+  status: OrderStatus;
 }
+
+type OrderStatus =
+  | "novo"
+  | "em_preparo"
+  | "saiu_para_entrega"
+  | "finalizado"
+  | "cancelado";
 
 interface OrdersResponse {
   success: boolean;
   orders: StoredOrder[];
 }
+
+const statusOptions: { value: OrderStatus; label: string }[] = [
+  { value: "novo", label: "Novo" },
+  { value: "em_preparo", label: "Em preparo" },
+  { value: "saiu_para_entrega", label: "Saiu para entrega" },
+  { value: "finalizado", label: "Finalizado" },
+  { value: "cancelado", label: "Cancelado" },
+];
 
 const formatDate = (value: string) => {
   return new Date(value).toLocaleString("pt-BR", {
@@ -44,6 +59,7 @@ const formatDate = (value: string) => {
 export default function OwnerOrdersPage() {
   const [orders, setOrders] = useState<StoredOrder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isUpdatingOrder, setIsUpdatingOrder] = useState<string | null>(null);
 
   const fetchOrders = async (): Promise<StoredOrder[]> => {
     const response = await fetch("/api/orders", { cache: "no-store" });
@@ -58,6 +74,23 @@ export default function OwnerOrdersPage() {
       setOrders(nextOrders);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const updateOrderStatus = async (orderId: string, status: OrderStatus) => {
+    setIsUpdatingOrder(orderId);
+    try {
+      await fetch("/api/orders", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ orderId, status }),
+      });
+
+      await loadOrders();
+    } finally {
+      setIsUpdatingOrder(null);
     }
   };
 
@@ -161,6 +194,29 @@ export default function OwnerOrdersPage() {
                   <span className="text-sm font-semibold text-zinc-600">
                     {formatDate(order.createdAt)}
                   </span>
+                </div>
+
+                <div className="mt-2 flex items-center gap-2">
+                  <span className="text-sm font-bold text-zinc-700">
+                    Status:
+                  </span>
+                  <select
+                    value={order.status}
+                    disabled={isUpdatingOrder === order.orderId}
+                    onChange={(event) =>
+                      void updateOrderStatus(
+                        order.orderId,
+                        event.target.value as OrderStatus,
+                      )
+                    }
+                    className="field-base max-w-[220px] py-1.5"
+                  >
+                    {statusOptions.map((status) => (
+                      <option key={status.value} value={status.value}>
+                        {status.label}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 <p className="mt-2 text-sm text-zinc-700">
