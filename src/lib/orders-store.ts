@@ -1,3 +1,6 @@
+import { promises as fs } from "node:fs";
+import path from "node:path";
+
 export interface OrderItem {
   id: number;
   name: string;
@@ -30,27 +33,75 @@ export interface StoredOrder {
 }
 
 const MAX_ORDERS = 200;
-const ordersStore: StoredOrder[] = [];
+const dataFilePath =
+  process.env.ORDERS_DATA_FILE ??
+  path.join(/* turbopackIgnore: true */ process.cwd(), ".data", "orders.json");
 
-export const addOrder = (order: StoredOrder) => {
-  ordersStore.unshift(order);
+let ordersStoreCache: StoredOrder[] | null = null;
+let writeQueue = Promise.resolve();
 
-  if (ordersStore.length > MAX_ORDERS) {
-    ordersStore.splice(MAX_ORDERS);
+const ensureLoaded = async (): Promise<StoredOrder[]> => {
+  if (ordersStoreCache) {
+    return ordersStoreCache;
   }
+
+  try {
+    const fileContent = await fs.readFile(dataFilePath, "utf-8");
+    const parsed = JSON.parse(fileContent);
+    ordersStoreCache = Array.isArray(parsed) ? parsed : [];
+  } catch {
+    ordersStoreCache = [];
+  }
+
+  return ordersStoreCache;
 };
 
-export const listOrders = (): StoredOrder[] => {
-  return ordersStore;
+const persist = async (orders: StoredOrder[]) => {
+  writeQueue = writeQueue
+    .then(async () => {
+      try {
+        await fs.mkdir(path.dirname(dataFilePath), { recursive: true });
+        await fs.writeFile(
+          dataFilePath,
+          JSON.stringify(orders, null, 2),
+          "utf-8",
+        );
+      } catch {
+        // Se não houver permissão de escrita no ambiente, mantém em memória.
+      }
+    })
+    .catch(() => undefined);
+
+  await writeQueue;
 };
 
-export const updateOrderStatus = (
+export const addOrder = async (order: StoredOrder) => {
+  const orders = await ensureLoaded();
+
+  orders.unshift(order);
+
+  if (orders.length > MAX_ORDERS) {
+    orders.splice(MAX_ORDERS);
+  }
+
+  await persist(orders);
+};
+
+export const listOrders = async (): Promise<StoredOrder[]> => {
+  const orders = await ensureLoaded();
+  return [...orders];
+};
+
+export const updateOrderStatus = async (
   orderId: string,
   status: OrderStatus,
-): StoredOrder | null => {
-  const order = ordersStore.find((item) => item.orderId === orderId);
+): Promise<StoredOrder | null> => {
+  const orders = await ensureLoaded();
+  const order = orders.find((item) => item.orderId === orderId);
   if (!order) return null;
 
   order.status = status;
+
+  await persist(orders);
   return order;
 };

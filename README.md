@@ -8,6 +8,14 @@ Aplicacao Next.js para cardapio e fechamento de pedidos da lanchonete.
 - Checkout com dados do cliente
 - Registro de pedidos para operacao da lanchonete
 - Area do dono com acompanhamento e atualizacao de status
+- Filtros por status e busca por cliente/pedido/item
+- Dashboard operacional (pedidos em andamento, faturamento do dia e ticket medio)
+
+## Persistencia de pedidos
+
+- Nesta fase, os pedidos sao salvos em arquivo local `.data/orders.json`.
+- Isso evita perda imediata de pedidos em reinicio local do servidor.
+- Para producao com alta confiabilidade, a proxima etapa recomendada eh banco gerenciado (Postgres/Supabase).
 
 ## Como rodar localmente
 

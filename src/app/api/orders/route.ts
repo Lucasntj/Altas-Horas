@@ -53,7 +53,7 @@ export async function POST(request: Request) {
       0,
     );
 
-    addOrder({
+    await addOrder({
       orderId,
       createdAt: new Date().toISOString(),
       customer,
@@ -75,10 +75,40 @@ export async function POST(request: Request) {
   }
 }
 
-export async function GET() {
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const statusFilter = searchParams.get("status");
+  const searchFilter = searchParams.get("search")?.trim().toLowerCase() ?? "";
+
+  const allOrders = await listOrders();
+
+  const filteredOrders = allOrders.filter((order) => {
+    const statusMatches =
+      !statusFilter ||
+      statusFilter === "todos" ||
+      order.status === statusFilter;
+
+    if (!statusMatches) return false;
+
+    if (!searchFilter) return true;
+
+    const searchBase = [
+      order.orderId,
+      order.customer.name,
+      order.customer.phone,
+      order.customer.address,
+      order.customer.paymentMethod,
+      ...order.items.map((item) => item.name),
+    ]
+      .join(" ")
+      .toLowerCase();
+
+    return searchBase.includes(searchFilter);
+  });
+
   return NextResponse.json({
     success: true,
-    orders: listOrders(),
+    orders: filteredOrders,
   });
 }
 
@@ -93,7 +123,7 @@ export async function PATCH(request: Request) {
       );
     }
 
-    const updatedOrder = updateOrderStatus(body.orderId, body.status);
+    const updatedOrder = await updateOrderStatus(body.orderId, body.status);
     if (!updatedOrder) {
       return NextResponse.json(
         { success: false, message: "Pedido nao encontrado." },
