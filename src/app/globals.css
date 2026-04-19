@@ -64,6 +64,12 @@ textarea {
 }
 
 @media (max-width: 768px) {
+  html,
+  body {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+
   body {
     font-size: 14px;
   }

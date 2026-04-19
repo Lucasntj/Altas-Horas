@@ -2,7 +2,7 @@
 
 import { useCart } from "@/context/CartContext";
 import type { Product } from "@/data/products";
-import { IconPlus, IconStar } from "@tabler/icons-react";
+import { IconPlus } from "@tabler/icons-react";
 import Image from "next/image";
 
 interface Props {
@@ -12,6 +12,17 @@ interface Props {
 
 export default function ProductCard({ product, canOrder = true }: Props) {
   const { addToCart, notify } = useCart();
+
+  const getShortDescription = (description: string) => {
+    const cleaned = description.replace(/\s+/g, " ").trim();
+    if (cleaned.length <= 78) return cleaned;
+    return `${cleaned.slice(0, 75).trimEnd()}...`;
+  };
+
+  const badges: string[] = [];
+  if (product.isFeatured) badges.push("🔥 Mais pedido");
+  if (product.isPopular) badges.push("⭐ Popular");
+  if (product.price <= 24.9) badges.push("💰 Custo-benefício");
 
   const handleAdd = () => {
     if (!canOrder) {
@@ -30,56 +41,56 @@ export default function ProductCard({ product, canOrder = true }: Props) {
   };
 
   return (
-    <article className="group relative flex flex-col overflow-hidden rounded-2xl border border-white/12 bg-zinc-900 transition-all duration-200 hover:border-yellow-500/35 hover:shadow-[0_12px_40px_rgba(234,179,8,0.16)]">
-      {/* Badges */}
-      <div className="absolute left-2.5 top-2.5 z-10 flex gap-1.5">
+    <article className="relative overflow-hidden rounded-2xl border border-white/12 bg-zinc-900 p-2.5 transition-all duration-200 hover:border-yellow-500/35 hover:shadow-[0_12px_32px_rgba(234,179,8,0.14)] md:p-3">
+      <div className="mb-2 flex flex-wrap gap-1.5">
         {!product.isAvailable && (
           <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-zinc-900 shadow">
             Indisponível
           </span>
         )}
-        {product.isFeatured && (
-          <span className="flex items-center gap-1 rounded-full bg-yellow-500 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-black shadow">
-            <IconStar size={9} fill="white" stroke={0} />
-            Destaque
+        {badges.map((badge, index) => (
+          <span
+            key={`${product.id}-${badge}`}
+            className={`rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-wide shadow ${
+              index === 0
+                ? "bg-yellow-500 text-black"
+                : "bg-yellow-300 text-zinc-900"
+            }`}
+          >
+            {badge}
           </span>
-        )}
-        {product.isPopular && (
-          <span className="rounded-full bg-yellow-300 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-zinc-900 shadow">
-            🔥 Popular
-          </span>
-        )}
+        ))}
       </div>
 
-      {/* Imagem */}
-      <div className="relative h-40 w-full overflow-hidden rounded-[12px] bg-zinc-800 m-2 mb-0 sm:m-0 sm:rounded-none sm:h-48">
-        <Image
-          src={product.image}
-          alt={product.name}
-          fill
-          className={`object-cover ${product.isAvailable ? "" : "grayscale"}`}
-          sizes="(max-width: 768px) 100vw, 50vw"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-zinc-900/60 to-transparent" />
-      </div>
+      <div className="relative flex gap-2.5 md:gap-3">
+        <div className="w-[116px] shrink-0 md:w-[150px]">
+          <Image
+            src={product.image}
+            alt={product.name}
+            width={220}
+            height={130}
+            className={`h-[130px] w-full rounded-[12px] object-cover object-center ${
+              product.isAvailable ? "" : "grayscale"
+            }`}
+            sizes="(max-width: 768px) 116px, 150px"
+          />
+        </div>
 
-      {/* Conteúdo */}
-      <div className="flex flex-1 flex-col p-3 sm:p-4">
-        <h3 className="text-[20px] leading-tight font-extrabold text-white sm:text-[17px]">
-          {product.name}
-        </h3>
-        <p className="mt-1 flex-1 text-[14px] leading-snug text-zinc-200 line-clamp-2 sm:text-sm sm:text-zinc-400">
-          {product.description}
-        </p>
-
-        <div className="mt-3 flex items-center justify-between gap-2">
-          <span className="text-[18px] leading-none font-extrabold text-yellow-400 sm:text-xl">
+        <div className="min-w-0 flex-1 pb-12 md:pb-0">
+          <h3 className="text-[17px] font-extrabold leading-tight text-white md:text-[18px]">
+            {product.name}
+          </h3>
+          <p className="mt-1 text-[12px] leading-snug text-zinc-300 line-clamp-2 md:text-[13px]">
+            {getShortDescription(product.description)}
+          </p>
+          <p className="mt-2 text-[18px] font-extrabold leading-none text-yellow-400 md:text-[18px]">
             R$ {product.price.toFixed(2)}
-          </span>
+          </p>
+
           <button
             onClick={handleAdd}
             disabled={!product.isAvailable || !canOrder}
-            className="flex min-h-9 items-center gap-1.5 rounded-xl bg-yellow-500 px-3 py-2 text-xs font-bold text-black shadow-md shadow-yellow-500/25 transition-all hover:bg-yellow-400 active:scale-95 disabled:cursor-not-allowed disabled:bg-zinc-500 disabled:text-zinc-900 disabled:shadow-none sm:min-h-10 sm:px-4 sm:py-2.5 sm:text-sm"
+            className="absolute bottom-0 right-0 flex min-h-10 items-center gap-1.5 rounded-[10px] bg-yellow-500 px-[14px] py-[10px] text-xs font-bold text-black shadow-md shadow-yellow-500/30 transition-all hover:bg-yellow-400 active:scale-95 disabled:cursor-not-allowed disabled:bg-zinc-500 disabled:text-zinc-900 disabled:shadow-none"
             aria-label={
               product.isAvailable
                 ? `Adicionar ${product.name} ao carrinho`
@@ -88,7 +99,7 @@ export default function ProductCard({ product, canOrder = true }: Props) {
           >
             <IconPlus size={15} stroke={2.5} />
             {!canOrder
-              ? "Loja fechada"
+              ? "Fechada"
               : product.isAvailable
                 ? "Adicionar"
                 : "Indisponível"}
