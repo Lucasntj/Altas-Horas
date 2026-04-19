@@ -29,7 +29,6 @@ export interface StoredOrder {
   status: OrderStatus;
 }
 
-const MAX_ORDERS = 200;
 const KV_ORDERS_KEY = "altas-horas:orders";
 const dataFilePath =
   process.env.ORDERS_DATA_FILE ??
@@ -99,6 +98,31 @@ const ensureDb = async () => {
   dbInitialized = true;
 };
 
+const persistToNonDbStores = async (orders: StoredOrder[]) => {
+  try {
+    await kvSet(KV_ORDERS_KEY, orders);
+  } catch (error) {
+    console.warn("Erro ao salvar em KV:", error);
+  }
+
+  writeQueue = writeQueue
+    .then(async () => {
+      try {
+        await fs.mkdir(path.dirname(dataFilePath), { recursive: true });
+        await fs.writeFile(
+          dataFilePath,
+          JSON.stringify(orders, null, 2),
+          "utf-8",
+        );
+      } catch {
+        // Sem permissao de escrita, continua.
+      }
+    })
+    .catch(() => undefined);
+
+  await writeQueue;
+};
+
 const ensureLoaded = async (): Promise<StoredOrder[]> => {
   if (ordersStoreCache) {
     return ordersStoreCache;
@@ -134,9 +158,7 @@ const ensureLoaded = async (): Promise<StoredOrder[]> => {
           SELECT order_id, created_at, customer, items, total_value, status
           FROM orders
           ORDER BY created_at DESC
-          LIMIT $1
         `,
-        [MAX_ORDERS],
       );
 
       ordersStoreCache = result.rows.map(mapRowToOrder);
@@ -164,66 +186,60 @@ const ensureLoaded = async (): Promise<StoredOrder[]> => {
   return ordersStoreCache;
 };
 
-const persistToEverywhere = async (orders: StoredOrder[]) => {
-  ordersStoreCache = orders;
+const insertOrderToDb = async (order: StoredOrder) => {
+  if (!pool) return;
 
-  // 1. Salva em KV
   try {
-    await kvSet(KV_ORDERS_KEY, orders.slice(0, MAX_ORDERS));
+    await ensureDb();
+    await pool.query(
+      `
+        INSERT INTO orders (order_id, created_at, customer, items, total_value, status)
+        VALUES ($1, $2, $3::jsonb, $4::jsonb, $5, $6)
+        ON CONFLICT (order_id) DO UPDATE SET
+          created_at = EXCLUDED.created_at,
+          customer = EXCLUDED.customer,
+          items = EXCLUDED.items,
+          total_value = EXCLUDED.total_value,
+          status = EXCLUDED.status
+      `,
+      [
+        order.orderId,
+        order.createdAt,
+        JSON.stringify(order.customer),
+        JSON.stringify(order.items),
+        order.totalValue,
+        order.status,
+      ],
+    );
   } catch (error) {
-    console.warn("Erro ao salvar em KV:", error);
+    console.warn("Erro ao inserir pedido em Postgres:", error);
   }
+};
 
-  // 2. Salva em Postgres
-  if (pool) {
-    try {
-      await ensureDb();
-      // Limpa e reinsere
-      await pool.query(`DELETE FROM orders`);
-      for (const order of orders.slice(0, MAX_ORDERS)) {
-        await pool.query(
-          `
-            INSERT INTO orders (order_id, created_at, customer, items, total_value, status)
-            VALUES ($1, $2, $3::jsonb, $4::jsonb, $5, $6)
-          `,
-          [
-            order.orderId,
-            order.createdAt,
-            JSON.stringify(order.customer),
-            JSON.stringify(order.items),
-            order.totalValue,
-            order.status,
-          ],
-        );
-      }
-    } catch (error) {
-      console.warn("Erro ao salvar em Postgres:", error);
-    }
+const updateOrderStatusInDb = async (orderId: string, status: OrderStatus) => {
+  if (!pool) return;
+
+  try {
+    await ensureDb();
+    await pool.query(
+      `
+        UPDATE orders
+        SET status = $2
+        WHERE order_id = $1
+      `,
+      [orderId, status],
+    );
+  } catch (error) {
+    console.warn("Erro ao atualizar status em Postgres:", error);
   }
-
-  // 3. Salva em arquivo
-  writeQueue = writeQueue
-    .then(async () => {
-      try {
-        await fs.mkdir(path.dirname(dataFilePath), { recursive: true });
-        await fs.writeFile(
-          dataFilePath,
-          JSON.stringify(orders.slice(0, MAX_ORDERS), null, 2),
-          "utf-8",
-        );
-      } catch {
-        // Sem permissão de escrita, continua
-      }
-    })
-    .catch(() => undefined);
-
-  await writeQueue;
 };
 
 export const addOrder = async (order: StoredOrder) => {
   const orders = await ensureLoaded();
   orders.unshift(order);
-  await persistToEverywhere(orders);
+
+  await persistToNonDbStores(orders);
+  await insertOrderToDb(order);
 };
 
 export const listOrders = async (): Promise<StoredOrder[]> => {
@@ -240,7 +256,9 @@ export const updateOrderStatus = async (
   if (!order) return null;
 
   order.status = normalizeStatus(status);
-  await persistToEverywhere(orders);
+
+  await persistToNonDbStores(orders);
+  await updateOrderStatusInDb(orderId, order.status);
 
   return order;
 };

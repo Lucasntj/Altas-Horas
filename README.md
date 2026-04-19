@@ -14,8 +14,8 @@ Aplicacao Next.js para cardapio e fechamento de pedidos da lanchonete.
 ## Persistencia de pedidos
 
 - Em producao, o sistema usa Postgres automaticamente quando `DATABASE_URL` estiver configurada.
-- Em ambiente local sem banco, usa fallback em arquivo `.data/orders.json`.
-- O backend suporta as duas formas sem mudar o frontend.
+- Sem banco, usa fallback em arquivo JSON. No Render, esse arquivo precisa apontar para disco persistente, por exemplo com `ORDERS_DATA_FILE=/var/data/orders.json`.
+- O sistema agora preserva o historico completo das transacoes, sem cortar os pedidos antigos automaticamente.
 
 ## Como rodar localmente
 
