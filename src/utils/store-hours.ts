@@ -12,6 +12,13 @@ const parseBoolean = (value: string | undefined): boolean => {
   return ["1", "true", "yes", "on"].includes(normalized);
 };
 
+export interface StoreSettings {
+  openHour: number;
+  closeHour: number;
+  timezone: string;
+  forceOpen: boolean;
+}
+
 export const STORE_OPEN_HOUR: number = parseHour(
   process.env.NEXT_PUBLIC_STORE_OPEN_HOUR ?? process.env.STORE_OPEN_HOUR,
   18,
@@ -31,29 +38,75 @@ export const STORE_FORCE_OPEN: boolean = parseBoolean(
   process.env.NEXT_PUBLIC_STORE_FORCE_OPEN ?? process.env.STORE_FORCE_OPEN,
 );
 
-const getHourInStoreTimezone = (date: Date): number => {
-  const hour = new Intl.DateTimeFormat("en-GB", {
-    hour: "2-digit",
-    hour12: false,
-    timeZone: STORE_TIMEZONE,
-  }).format(date);
+export const DEFAULT_STORE_SETTINGS: StoreSettings = {
+  openHour: STORE_OPEN_HOUR,
+  closeHour: STORE_CLOSE_HOUR,
+  timezone: STORE_TIMEZONE,
+  forceOpen: STORE_FORCE_OPEN,
+};
 
-  return Number.parseInt(hour, 10);
+export const normalizeStoreSettings = (
+  value?: Partial<StoreSettings> | null,
+): StoreSettings => ({
+  openHour: parseHour(String(value?.openHour), DEFAULT_STORE_SETTINGS.openHour),
+  closeHour: parseHour(
+    String(value?.closeHour),
+    DEFAULT_STORE_SETTINGS.closeHour,
+  ),
+  timezone:
+    typeof value?.timezone === "string" && value.timezone.trim()
+      ? value.timezone.trim()
+      : DEFAULT_STORE_SETTINGS.timezone,
+  forceOpen:
+    typeof value?.forceOpen === "boolean"
+      ? value.forceOpen
+      : DEFAULT_STORE_SETTINGS.forceOpen,
+});
+
+const getHourInStoreTimezone = (date: Date, timezone: string): number => {
+  try {
+    const hour = new Intl.DateTimeFormat("en-GB", {
+      hour: "2-digit",
+      hour12: false,
+      timeZone: timezone,
+    }).format(date);
+
+    return Number.parseInt(hour, 10);
+  } catch {
+    const fallbackHour = new Intl.DateTimeFormat("en-GB", {
+      hour: "2-digit",
+      hour12: false,
+      timeZone: DEFAULT_STORE_SETTINGS.timezone,
+    }).format(date);
+
+    return Number.parseInt(fallbackHour, 10);
+  }
 };
 
 // Suporta janelas que cruzam meia-noite (ex.: 18:00 até 02:00)
-export const isStoreOpenAt = (date: Date): boolean => {
-  if (STORE_FORCE_OPEN) return true;
+export const isStoreOpenAt = (
+  date: Date,
+  settings: StoreSettings = DEFAULT_STORE_SETTINGS,
+): boolean => {
+  if (settings.forceOpen) return true;
 
-  const hour = getHourInStoreTimezone(date);
+  const hour = getHourInStoreTimezone(date, settings.timezone);
 
-  if (STORE_OPEN_HOUR === STORE_CLOSE_HOUR) {
+  if (settings.openHour === settings.closeHour) {
     return true;
   }
 
-  if (STORE_OPEN_HOUR < STORE_CLOSE_HOUR) {
-    return hour >= STORE_OPEN_HOUR && hour < STORE_CLOSE_HOUR;
+  if (settings.openHour < settings.closeHour) {
+    return hour >= settings.openHour && hour < settings.closeHour;
   }
 
-  return hour >= STORE_OPEN_HOUR || hour < STORE_CLOSE_HOUR;
+  return hour >= settings.openHour || hour < settings.closeHour;
+};
+
+export const formatStoreHours = (settings: StoreSettings): string => {
+  if (settings.forceOpen) {
+    return "aberta manualmente";
+  }
+
+  return `${String(settings.openHour).padStart(2, "0")}:00 às ${String(settings.closeHour).padStart(2, "0")}:00`;
 };

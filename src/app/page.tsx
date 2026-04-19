@@ -8,11 +8,20 @@ import SocialProof from "@/components/SocialProof";
 import CategoryFilter from "@/components/menu/CategoryFilter";
 import ProductCard from "@/components/menu/ProductCard";
 import type { Product } from "@/data/products";
-import { isStoreOpenAt } from "@/utils/store-hours";
+import {
+  formatStoreHours,
+  isStoreOpenAt,
+  type StoreSettings,
+} from "@/utils/store-hours";
 
 interface ProductsResponse {
   success: boolean;
   products: Product[];
+}
+
+interface StoreSettingsResponse {
+  success: boolean;
+  settings: StoreSettings;
 }
 
 type ActiveCategory = Product["category"] | "todos" | "destaques";
@@ -23,6 +32,9 @@ export default function Home() {
   const [hasProductsError, setHasProductsError] = useState(false);
   const [activeCategory, setActiveCategory] = useState<ActiveCategory>("todos");
   const [isStoreOpen, setIsStoreOpen] = useState(true);
+  const [storeSettings, setStoreSettings] = useState<StoreSettings | null>(
+    null,
+  );
 
   useEffect(() => {
     let mounted = true;
@@ -46,17 +58,26 @@ export default function Home() {
       }
     };
 
-    const syncStoreStatus = () => {
-      if (!mounted) return;
-      setIsStoreOpen(isStoreOpenAt(new Date()));
+    const loadStoreSettings = async () => {
+      try {
+        const response = await fetch("/api/store-settings", {
+          cache: "no-store",
+        });
+        const payload = (await response.json()) as StoreSettingsResponse;
+        if (!mounted || !payload.success) return;
+        setStoreSettings(payload.settings);
+        setIsStoreOpen(isStoreOpenAt(new Date(), payload.settings));
+      } catch {
+        if (!mounted) return;
+      }
     };
 
     void loadProducts();
-    syncStoreStatus();
+    void loadStoreSettings();
 
     const intervalId = setInterval(() => {
       void loadProducts();
-      syncStoreStatus();
+      void loadStoreSettings();
     }, 60000);
 
     return () => {
@@ -64,6 +85,11 @@ export default function Home() {
       clearInterval(intervalId);
     };
   }, []);
+
+  const storeHoursLabel = useMemo(() => {
+    if (!storeSettings) return "";
+    return formatStoreHours(storeSettings);
+  }, [storeSettings]);
 
   const counts = useMemo(
     () => ({
@@ -99,7 +125,7 @@ export default function Home() {
         {!isStoreOpen && (
           <div className="rounded-2xl border border-yellow-500/45 bg-yellow-500/10 p-4 text-center animate-fade-up">
             <p className="text-sm font-extrabold text-yellow-300">
-              Estamos fechados no momento. Volte no horário de funcionamento.
+              Estamos fechados no momento. Horário atual: {storeHoursLabel}.
             </p>
           </div>
         )}

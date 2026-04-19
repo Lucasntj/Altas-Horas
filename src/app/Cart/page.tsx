@@ -23,7 +23,11 @@ import {
 } from "@/utils/config";
 import { formatPhone } from "@/utils/whatsapp";
 import type { OrderType, PaymentMethod } from "@/utils/whatsapp";
-import { isStoreOpenAt } from "@/utils/store-hours";
+import {
+  formatStoreHours,
+  isStoreOpenAt,
+  type StoreSettings,
+} from "@/utils/store-hours";
 
 interface FormState {
   name: string;
@@ -57,6 +61,11 @@ interface LastOrderSnapshot {
   subtotal: number;
   deliveryFee: number;
   total: number;
+}
+
+interface StoreSettingsResponse {
+  success: boolean;
+  settings: StoreSettings;
 }
 
 const initialForm: FormState = {
@@ -107,6 +116,9 @@ export default function CartPage() {
   const [success, setSuccess] = useState(false);
   const [lastOrder, setLastOrder] = useState<LastOrderSnapshot | null>(null);
   const [isStoreOpen, setIsStoreOpen] = useState(true);
+  const [storeSettings, setStoreSettings] = useState<StoreSettings | null>(
+    null,
+  );
 
   useEffect(() => {
     const profile = {
@@ -119,10 +131,29 @@ export default function CartPage() {
   }, [form.name, form.phone, form.address, form.neighborhood]);
 
   useEffect(() => {
-    const syncStoreStatus = () => setIsStoreOpen(isStoreOpenAt(new Date()));
-    syncStoreStatus();
-    const intervalId = setInterval(syncStoreStatus, 60000);
-    return () => clearInterval(intervalId);
+    let mounted = true;
+
+    const loadStoreSettings = async () => {
+      try {
+        const response = await fetch("/api/store-settings", {
+          cache: "no-store",
+        });
+        const payload = (await response.json()) as StoreSettingsResponse;
+        if (!mounted || !payload.success) return;
+        setStoreSettings(payload.settings);
+        setIsStoreOpen(isStoreOpenAt(new Date(), payload.settings));
+      } catch {
+        if (!mounted) return;
+      }
+    };
+
+    void loadStoreSettings();
+    const intervalId = setInterval(() => void loadStoreSettings(), 60000);
+
+    return () => {
+      mounted = false;
+      clearInterval(intervalId);
+    };
   }, []);
 
   const setField =
@@ -148,6 +179,7 @@ export default function CartPage() {
         form.neighborhood.trim().length >= 2));
 
   const canSubmit = items.length > 0 && baseFormValid && isStoreOpen;
+  const storeHoursLabel = storeSettings ? formatStoreHours(storeSettings) : "";
 
   const handleSubmit = async () => {
     if (!canSubmit || isSubmitting) return;
@@ -337,8 +369,8 @@ export default function CartPage() {
         {!isStoreOpen && (
           <div className="mb-5 rounded-2xl border border-yellow-500/45 bg-yellow-500/10 p-4 text-center">
             <p className="text-sm font-extrabold text-yellow-300">
-              Estamos fechados no momento. Novos pedidos serão liberados no
-              horário de funcionamento.
+              Estamos fechados no momento. Configuracao atual:{" "}
+              {storeHoursLabel || "nosso horario de funcionamento"}.
             </p>
           </div>
         )}

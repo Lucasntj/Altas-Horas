@@ -12,11 +12,8 @@ import {
   sendOrderConfirmationNotification,
   sendOrderStatusNotification,
 } from "@/lib/whatsapp-notifier";
-import {
-  isStoreOpenAt,
-  STORE_OPEN_HOUR,
-  STORE_CLOSE_HOUR,
-} from "@/utils/store-hours";
+import { getStoreSettings } from "@/lib/store-settings-store";
+import { formatStoreHours, isStoreOpenAt } from "@/utils/store-hours";
 
 interface OrderPayload {
   customer: OrderCustomer;
@@ -44,11 +41,13 @@ const statusPriority: Record<OrderStatus, number> = {
 
 export async function POST(request: Request) {
   try {
-    if (!isStoreOpenAt(new Date())) {
+    const storeSettings = await getStoreSettings();
+
+    if (!isStoreOpenAt(new Date(), storeSettings)) {
       return NextResponse.json(
         {
           success: false,
-          message: `Loja fechada no momento. Horário: ${String(STORE_OPEN_HOUR).padStart(2, "0")}:00 às ${String(STORE_CLOSE_HOUR).padStart(2, "0")}:00.`,
+          message: `Loja fechada no momento. Horário: ${formatStoreHours(storeSettings)}.`,
         },
         { status: 409 },
       );

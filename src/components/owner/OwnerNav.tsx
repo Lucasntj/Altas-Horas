@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   IconChartBar,
   IconCreditCard,
+  IconClockHour4,
   IconLogout,
   IconPackage,
   IconShoppingCart,
@@ -17,6 +18,7 @@ const navItems = [
   { href: "/dono/pedidos", label: "Pedidos", icon: IconShoppingCart },
   { href: "/dono/pagamentos", label: "Pagamentos", icon: IconCreditCard },
   { href: "/dono/usuarios", label: "Produtos", icon: IconPackage },
+  { href: "/dono/horarios", label: "Horarios", icon: IconClockHour4 },
 ];
 
 export default function OwnerNav() {

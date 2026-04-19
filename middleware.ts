@@ -44,8 +44,15 @@ export function middleware(request: NextRequest) {
     pathname === "/api/orders" && request.method !== "POST";
   const isProductsManagement =
     pathname === "/api/products" && request.method !== "GET";
+  const isStoreSettingsManagement =
+    pathname === "/api/store-settings" && request.method !== "GET";
 
-  if (!isOwnerRoute && !isOrdersManagement && !isProductsManagement) {
+  if (
+    !isOwnerRoute &&
+    !isOrdersManagement &&
+    !isProductsManagement &&
+    !isStoreSettingsManagement
+  ) {
     return NextResponse.next();
   }
 
@@ -57,5 +64,10 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dono/:path*", "/api/orders", "/api/products"],
+  matcher: [
+    "/dono/:path*",
+    "/api/orders",
+    "/api/products",
+    "/api/store-settings",
+  ],
 };
