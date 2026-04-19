@@ -63,6 +63,17 @@ textarea {
   animation: soft-pulse 2s ease infinite;
 }
 
+@media (max-width: 768px) {
+  body {
+    font-size: 14px;
+  }
+
+  .section-shell {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+}
+
 @layer components {
   .section-shell {
     @apply max-w-6xl mx-auto px-3 sm:px-4;

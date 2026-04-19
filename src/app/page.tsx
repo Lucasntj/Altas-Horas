@@ -119,7 +119,7 @@ export default function Home() {
     <div className="min-h-screen flex flex-col">
       <Header />
 
-      <main className="section-shell flex-1 space-y-6 pb-28 sm:pb-10">
+      <main className="section-shell flex-1 space-y-4 pb-28 sm:space-y-6 sm:pb-10">
         <DeliveryBanner />
 
         {!isStoreOpen && (
@@ -141,15 +141,15 @@ export default function Home() {
 
         {activeCategory === "todos" && featuredProducts.length > 0 && (
           <section>
-            <div className="mb-4">
+            <div className="mb-3">
               <p className="text-xs font-extrabold uppercase tracking-widest text-yellow-500">
                 Destaques
               </p>
-              <h2 className="mt-0.5 text-[2rem] leading-none font-extrabold text-white sm:text-2xl">
+              <h2 className="mt-0.5 text-[20px] leading-tight font-extrabold text-white sm:text-2xl">
                 Os favoritos da casa 🔥
               </h2>
             </div>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
               {featuredProducts.map((product) => (
                 <ProductCard
                   key={product.id}
@@ -162,11 +162,11 @@ export default function Home() {
         )}
 
         <section>
-          <div className="mb-4">
+          <div className="mb-3">
             <p className="text-xs font-extrabold uppercase tracking-widest text-yellow-500">
               Cardápio
             </p>
-            <h2 className="mt-0.5 text-[2rem] leading-none font-extrabold text-white sm:text-2xl">
+            <h2 className="mt-0.5 text-[20px] leading-tight font-extrabold text-white sm:text-2xl">
               Monte seu pedido
             </h2>
             <p className="mt-1 text-sm text-zinc-400 sm:text-xs sm:text-zinc-500">
@@ -174,7 +174,7 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="mb-5">
+          <div className="mb-3">
             <CategoryFilter
               active={activeCategory}
               onChange={setActiveCategory}
@@ -191,7 +191,7 @@ export default function Home() {
               Nenhum produto nessa categoria.
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
               {filtered.map((product) => (
                 <ProductCard
                   key={product.id}
