@@ -1,5 +1,4 @@
 import Image from "next/image";
-import Link from "next/link";
 
 const Header = () => {
   return (
@@ -50,12 +49,6 @@ const Header = () => {
               18:00 ate 02:00
             </p>
             <p className="text-sm text-zinc-600">Todos os dias</p>
-            <Link
-              href="/dono/pedidos"
-              className="mt-2 inline-block rounded-lg bg-[#0f766e] px-3 py-1.5 text-xs font-bold text-white hover:bg-[#0a5f59]"
-            >
-              Area do dono
-            </Link>
           </div>
         </div>
       </div>

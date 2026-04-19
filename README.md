@@ -26,6 +26,8 @@ Copie o arquivo `.env.example` para `.env.local` e preencha:
 - `WHATSAPP_ACCESS_TOKEN`: token da API WhatsApp Cloud (Meta)
 - `WHATSAPP_PHONE_NUMBER_ID`: Phone Number ID da conta WhatsApp Cloud
 - `WHATSAPP_API_VERSION`: opcional (padrao `v21.0`)
+- `OWNER_PANEL_USER`: usuario de acesso da Area do Dono (padrao `dono`)
+- `OWNER_PANEL_PASSWORD`: senha de acesso da Area do Dono
 
 ### Sem API configurada
 
@@ -43,3 +45,9 @@ Se `WHATSAPP_ACCESS_TOKEN` e `WHATSAPP_PHONE_NUMBER_ID` nao estiverem definidos,
 2. Cliente informa nome, WhatsApp e endereco
 3. Sistema envia pedido para o dono
 4. Sistema envia confirmacao para o WhatsApp do cliente
+
+## Area do dono protegida
+
+- Rota: `/dono/pedidos`
+- A listagem de pedidos (`GET /api/orders`) tambem eh protegida
+- O cliente nao ve atalho no frontend publico
