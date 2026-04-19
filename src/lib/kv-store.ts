@@ -10,10 +10,25 @@ interface KvClient {
 
 let kvClient: KvClient | null = null;
 let useKv = false;
+let kvInitialized = false;
+
+const hasKvEnv = (): boolean => {
+  const kvRestUrl = process.env.KV_REST_API_URL;
+  const kvRestToken = process.env.KV_REST_API_TOKEN;
+  const upstashUrl = process.env.UPSTASH_REDIS_REST_URL;
+  const upstashToken = process.env.UPSTASH_REDIS_REST_TOKEN;
+
+  return Boolean((kvRestUrl && kvRestToken) || (upstashUrl && upstashToken));
+};
 
 // Tenta carregar Vercel KV
 async function initKv() {
-  if (useKv || kvClient) return;
+  if (kvInitialized) return;
+  kvInitialized = true;
+
+  if (!hasKvEnv()) {
+    return;
+  }
 
   try {
     const kv = await import("@vercel/kv");
