@@ -106,13 +106,14 @@ export async function POST(request: Request) {
     } as const;
 
     await addOrder(order);
-    const whatsappSent = await sendOrderConfirmationNotification(order);
+    const whatsapp = await sendOrderConfirmationNotification(order);
 
     return NextResponse.json({
       success: true,
       orderId,
       message: "Pedido recebido com sucesso.",
-      whatsappSent,
+      whatsappSent: whatsapp.sent,
+      whatsappReason: whatsapp.reason,
     });
   } catch {
     return NextResponse.json(
@@ -184,13 +185,14 @@ export async function PATCH(request: Request) {
       );
     }
 
-    const whatsappSent = await sendOrderStatusNotification(updatedOrder);
+    const whatsapp = await sendOrderStatusNotification(updatedOrder);
 
     return NextResponse.json({
       success: true,
       order: updatedOrder,
       message: "Status do pedido atualizado com sucesso.",
-      whatsappSent,
+      whatsappSent: whatsapp.sent,
+      whatsappReason: whatsapp.reason,
     });
   } catch {
     return NextResponse.json(

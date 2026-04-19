@@ -44,6 +44,8 @@ interface CreateOrderResponse {
   success: boolean;
   orderId?: string;
   message?: string;
+  whatsappSent?: boolean;
+  whatsappReason?: string;
 }
 
 interface LastOrderSnapshot {
@@ -61,6 +63,8 @@ interface LastOrderSnapshot {
   subtotal: number;
   deliveryFee: number;
   total: number;
+  whatsappSent?: boolean;
+  whatsappReason?: string;
 }
 
 interface StoreSettingsResponse {
@@ -230,6 +234,8 @@ export default function CartPage() {
       }
 
       orderSnapshot.orderId = result.orderId;
+      orderSnapshot.whatsappSent = result.whatsappSent;
+      orderSnapshot.whatsappReason = result.whatsappReason;
       setLastOrder(orderSnapshot);
       clearCart();
       setSuccess(true);
@@ -271,6 +277,13 @@ export default function CartPage() {
                 Gerente será notificado em tempo real. Fique atento ao status da
                 entrega.
               </p>
+
+              {lastOrder.whatsappSent === false && (
+                <p className="mt-3 rounded-xl border border-yellow-500/40 bg-yellow-500/10 px-3 py-2 text-xs font-semibold text-yellow-200">
+                  Pedido salvo com sucesso, mas a confirmação automática no
+                  WhatsApp do cliente falhou. Motivo: {lastOrder.whatsappReason || "não informado"}.
+                </p>
+              )}
             </div>
 
             <div className="mt-6 rounded-2xl border border-white/10 bg-zinc-950/45 p-4">

@@ -3,14 +3,24 @@ import type { StoredOrder, OrderStatus } from "@/lib/orders-store";
 
 type WhatsAppProvider = "none" | "zapi";
 
+export interface WhatsAppNotificationResult {
+  sent: boolean;
+  reason?: string;
+}
+
 const WHATSAPP_PROVIDER =
   (process.env.WHATSAPP_PROVIDER?.toLowerCase() as WhatsAppProvider) ?? "none";
 
 const ZAPI_BASE_URL =
   process.env.WHATSAPP_ZAPI_BASE_URL ?? "https://api.z-api.io";
-const ZAPI_INSTANCE_ID = process.env.WHATSAPP_ZAPI_INSTANCE_ID;
-const ZAPI_INSTANCE_TOKEN = process.env.WHATSAPP_ZAPI_INSTANCE_TOKEN;
-const ZAPI_CLIENT_TOKEN = process.env.WHATSAPP_ZAPI_CLIENT_TOKEN;
+const ZAPI_INSTANCE_ID =
+  process.env.WHATSAPP_ZAPI_INSTANCE_ID ?? process.env.ZAPI_INSTANCE_ID;
+const ZAPI_INSTANCE_TOKEN =
+  process.env.WHATSAPP_ZAPI_INSTANCE_TOKEN ??
+  process.env.WHATSAPP_ZAPI_TOKEN ??
+  process.env.ZAPI_INSTANCE_TOKEN;
+const ZAPI_CLIENT_TOKEN =
+  process.env.WHATSAPP_ZAPI_CLIENT_TOKEN ?? process.env.ZAPI_CLIENT_TOKEN;
 
 const formatCurrency = (value: number) =>
   value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -23,9 +33,13 @@ const statusLabel: Record<OrderStatus, string> = {
 };
 
 const normalizePhone = (rawPhone: string): string | null => {
-  const digits = rawPhone.replace(/\D/g, "");
+  const digits = rawPhone.replace(/\D/g, "").replace(/^0+/, "");
 
   if (digits.length === 13 && digits.startsWith("55")) {
+    return digits;
+  }
+
+  if (digits.length === 12 && digits.startsWith("55")) {
     return digits;
   }
 
@@ -101,13 +115,17 @@ const buildStatusUpdateMessage = (order: StoredOrder) => {
 
 const sendViaZApi = async (phone: string, message: string) => {
   if (!ZAPI_INSTANCE_ID || !ZAPI_INSTANCE_TOKEN) {
-    throw new Error(
-      "Credenciais Z-API ausentes (WHATSAPP_ZAPI_INSTANCE_ID / WHATSAPP_ZAPI_INSTANCE_TOKEN).",
-    );
+    return {
+      sent: false,
+      reason:
+        "Credenciais Z-API ausentes (WHATSAPP_ZAPI_INSTANCE_ID e WHATSAPP_ZAPI_INSTANCE_TOKEN).",
+    } as WhatsAppNotificationResult;
   }
 
+  const endpoint = `${ZAPI_BASE_URL.replace(/\/$/, "")}/instances/${ZAPI_INSTANCE_ID}/token/${ZAPI_INSTANCE_TOKEN}/send-text`;
+
   const response = await fetch(
-    `${ZAPI_BASE_URL}/instances/${ZAPI_INSTANCE_ID}/token/${ZAPI_INSTANCE_TOKEN}/send-text`,
+    endpoint,
     {
       method: "POST",
       headers: {
@@ -118,34 +136,64 @@ const sendViaZApi = async (phone: string, message: string) => {
     },
   );
 
+  const responseText = await response.text();
+
   if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Falha ao enviar mensagem pelo WhatsApp: ${errorText}`);
+    return {
+      sent: false,
+      reason: `Falha na Z-API (${response.status}): ${responseText}`,
+    };
   }
 
-  return true;
+  try {
+    const parsed = JSON.parse(responseText) as {
+      error?: unknown;
+      message?: unknown;
+      sent?: unknown;
+      status?: unknown;
+    };
+
+    const hasExplicitError =
+      Boolean(parsed.error) ||
+      parsed.sent === false ||
+      String(parsed.status ?? "").toLowerCase() === "error";
+
+    if (hasExplicitError) {
+      return {
+        sent: false,
+        reason: `Z-API respondeu erro: ${String(parsed.message ?? parsed.error ?? "sem detalhes")}`,
+      };
+    }
+  } catch {
+    // Alguns planos/versoes retornam texto simples em sucesso.
+  }
+
+  return { sent: true };
 };
 
 const sendWhatsAppMessage = async (rawPhone: string, message: string) => {
   const phone = normalizePhone(rawPhone);
   if (!phone) {
-    console.warn("WhatsApp: telefone inválido para envio:", rawPhone);
-    return false;
+    return {
+      sent: false,
+      reason: `Telefone inválido para WhatsApp: ${rawPhone}`,
+    } as WhatsAppNotificationResult;
   }
 
   if (WHATSAPP_PROVIDER === "zapi") {
-    const sent = await sendViaZApi(phone, message);
-    if (sent) {
+    const result = await sendViaZApi(phone, message);
+    if (result.sent) {
       console.info("WhatsApp: mensagem enviada com sucesso para", phone);
+    } else {
+      console.warn("WhatsApp: envio não concluído:", result.reason);
     }
-    return sent;
+    return result;
   }
 
-  console.warn(
-    "WhatsApp: provedor não configurado. Defina WHATSAPP_PROVIDER=zapi.",
-  );
-
-  return false;
+  return {
+    sent: false,
+    reason: "Provedor não configurado. Defina WHATSAPP_PROVIDER=zapi.",
+  };
 };
 
 export const sendOrderConfirmationNotification = async (order: StoredOrder) => {
@@ -156,7 +204,10 @@ export const sendOrderConfirmationNotification = async (order: StoredOrder) => {
     );
   } catch (error) {
     console.error("Erro ao enviar confirmação por WhatsApp:", error);
-    return false;
+    return {
+      sent: false,
+      reason: error instanceof Error ? error.message : "Erro inesperado.",
+    };
   }
 };
 
@@ -168,6 +219,9 @@ export const sendOrderStatusNotification = async (order: StoredOrder) => {
     );
   } catch (error) {
     console.error("Erro ao enviar atualização por WhatsApp:", error);
-    return false;
+    return {
+      sent: false,
+      reason: error instanceof Error ? error.message : "Erro inesperado.",
+    };
   }
 };
