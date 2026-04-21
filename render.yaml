@@ -1,9 +1,3 @@
-databases:
-  - name: altas-horas-db
-    plan: free
-    databaseName: altashorasdb
-    user: altashoras
-
 services:
   - type: web
     name: altas-horas-catalogo
@@ -26,6 +20,4 @@ services:
       - key: STORE_CLOSE_HOUR
         value: "2"
       - key: DATABASE_URL
-        fromDatabase:
-          name: altas-horas-db
-          property: connectionString
+        sync: false
