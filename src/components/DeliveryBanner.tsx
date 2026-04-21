@@ -10,23 +10,27 @@ export default function DeliveryBanner({
   operatingHours,
   forceOpen = false,
 }: DeliveryBannerProps) {
-  const hoursText = operatingHours?.trim() || OPERATING_HOURS;
+  const hoursText = operatingHours?.trim();
+
+  const gridColsClass = hoursText ? "md:grid-cols-3" : "md:grid-cols-2";
 
   return (
     <div className="rounded-2xl border border-yellow-500/26 bg-gradient-to-r from-yellow-500/10 to-yellow-300/5 px-3 py-2.5 sm:px-4 sm:py-3">
-      <div className="grid grid-cols-1 gap-1.5 text-[14px] md:grid-cols-3 md:gap-3 md:text-sm">
-        <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-zinc-200">
-          <IconClock
-            size={16}
-            className="text-yellow-400 shrink-0"
-            stroke={2}
-          />
-          <span>
-            <span className="font-bold text-white">{hoursText}</span>
-            {" · "}
-            {forceOpen ? "Controle manual ativo" : "Todos os dias"}
-          </span>
-        </div>
+      <div className={`grid grid-cols-1 gap-1.5 text-[14px] ${gridColsClass} md:gap-3 md:text-sm`}>
+        {hoursText && (
+          <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-zinc-200">
+            <IconClock
+              size={16}
+              className="text-yellow-400 shrink-0"
+              stroke={2}
+            />
+            <span>
+              <span className="font-bold text-white">{hoursText}</span>
+              {" · "}
+              {forceOpen ? "Controle manual ativo" : "Todos os dias"}
+            </span>
+          </div>
+        )}
         <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-zinc-200">
           <IconTruck
             size={16}

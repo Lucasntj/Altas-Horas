@@ -124,7 +124,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Header />
+      <Header operatingHours={operatingHoursLabel} forceOpen={Boolean(storeSettings?.forceOpen)} />
 
       <main className="section-shell flex-1 space-y-4 pb-28 sm:space-y-6 sm:pb-10">
         {!isStoreOpen && (
@@ -188,7 +188,6 @@ export default function Home() {
           </div>
 
           <DeliveryBanner
-            operatingHours={operatingHoursLabel}
             forceOpen={Boolean(storeSettings?.forceOpen)}
           />
 

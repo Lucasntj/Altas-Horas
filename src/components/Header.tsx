@@ -1,7 +1,7 @@
 "use client";
 
 import { useCart } from "@/context/CartContext";
-import { IconShoppingBag } from "@tabler/icons-react";
+import { IconShoppingBag, IconClock } from "@tabler/icons-react";
 import Image from "next/image";
 
 const Header = () => {
@@ -20,13 +20,24 @@ const Header = () => {
       <div className="absolute inset-0 bg-gradient-to-br from-[#040404]/97 via-[#131313]/92 to-[#040404]/96" />
 
       <div className="section-shell relative animate-fade-up pt-2 pb-2.5 sm:pt-3 sm:pb-4 md:pt-4 md:pb-5 lg:pt-5 lg:pb-6">
-        {/* Barra superior: badge de status + botão carrinho */}
+        {/* Barra superior: badge de status + horas + botão carrinho */}
         <div className="flex items-center justify-between gap-3">
           <div className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-white backdrop-blur-sm sm:text-xs sm:tracking-[0.14em]">
             <span className="h-2 w-2 rounded-full bg-yellow-400 animate-soft-pulse" />
             <span className="sm:hidden">Online</span>
             <span className="hidden sm:inline">Pedidos online ativos</span>
           </div>
+
+          {operatingHours && (
+            <div className="hidden sm:inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/30 px-3 py-1 text-sm text-zinc-200">
+              <IconClock size={16} className="text-yellow-400" stroke={2} />
+              <span className="font-bold text-white">{operatingHours}</span>
+              <span className="text-zinc-300">
+                {" · "}
+                {forceOpen ? "Todos os dias" : "Todos os dias"}
+              </span>
+            </div>
+          )}
 
           <button
             onClick={openCart}
