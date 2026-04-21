@@ -1,6 +1,7 @@
 import { kvGet, kvSet } from "./kv-store";
 import { promises as fs } from "node:fs";
 import path from "node:path";
+import { pool } from "./db";
 import productsData, { type Product } from "@/data/products";
 
 interface AvailabilityRow {
@@ -36,9 +37,25 @@ const editsFilePath =
     "products-edits.json",
   );
 
+let dbInitialized = false;
 let availabilityCache: Map<string, boolean> | null = null;
 let editsCache: Map<string, ProductEditRow> | null = null;
 let writeQueue = Promise.resolve();
+
+const ensureDb = async () => {
+  if (!pool || dbInitialized) return;
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS product_availability (
+      product_id TEXT PRIMARY KEY,
+      is_available BOOLEAN NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS product_edits (
+      product_id TEXT PRIMARY KEY,
+      data JSONB NOT NULL
+    );
+  `);
+  dbInitialized = true;
+};
 
 const ensureAvailabilityLoaded = async (): Promise<Map<string, boolean>> => {
   if (availabilityCache) return availabilityCache;
@@ -58,7 +75,24 @@ const ensureAvailabilityLoaded = async (): Promise<Map<string, boolean>> => {
     console.warn("Erro ao carregar availability de KV:", error);
   }
 
-  // 2. Tenta arquivo
+  // 2. Tenta Postgres
+  if (pool) {
+    try {
+      await ensureDb();
+      const result = await pool.query<{ product_id: string; is_available: boolean }>(
+        "SELECT product_id, is_available FROM product_availability",
+      );
+      availabilityCache = new Map();
+      for (const row of result.rows) {
+        availabilityCache.set(row.product_id, Boolean(row.is_available));
+      }
+      return availabilityCache;
+    } catch (error) {
+      console.warn("Erro ao carregar availability de Postgres:", error);
+    }
+  }
+
+  // 3. Tenta arquivo
   try {
     const file = await fs.readFile(availabilityFilePath, "utf-8");
     const parsed = JSON.parse(file) as AvailabilityRow[];
@@ -93,7 +127,24 @@ const ensureEditsLoaded = async (): Promise<Map<string, ProductEditRow>> => {
     console.warn("Erro ao carregar edits de KV:", error);
   }
 
-  // 2. Tenta arquivo
+  // 2. Tenta Postgres
+  if (pool) {
+    try {
+      await ensureDb();
+      const result = await pool.query<{ product_id: string; data: ProductEditRow }>(
+        "SELECT product_id, data FROM product_edits",
+      );
+      editsCache = new Map();
+      for (const row of result.rows) {
+        editsCache.set(row.product_id, { id: row.product_id, ...row.data });
+      }
+      return editsCache;
+    } catch (error) {
+      console.warn("Erro ao carregar edits de Postgres:", error);
+    }
+  }
+
+  // 3. Tenta arquivo
   try {
     const file = await fs.readFile(editsFilePath, "utf-8");
     const parsed = JSON.parse(file) as ProductEditRow[];
@@ -122,7 +173,24 @@ const persistAvailability = async (map: Map<string, boolean>) => {
     console.warn("Erro ao salvar availability em KV:", error);
   }
 
-  // 2. Salva em arquivo
+  // 2. Salva em Postgres
+  if (pool) {
+    try {
+      await ensureDb();
+      for (const [id, isAvailable] of map.entries()) {
+        await pool.query(
+          `INSERT INTO product_availability (product_id, is_available)
+           VALUES ($1, $2)
+           ON CONFLICT (product_id) DO UPDATE SET is_available = EXCLUDED.is_available`,
+          [id, isAvailable],
+        );
+      }
+    } catch (error) {
+      console.warn("Erro ao salvar availability em Postgres:", error);
+    }
+  }
+
+  // 3. Salva em arquivo
   writeQueue = writeQueue
     .then(async () => {
       try {
@@ -151,7 +219,25 @@ const persistEdits = async (map: Map<string, ProductEditRow>) => {
     console.warn("Erro ao salvar edits em KV:", error);
   }
 
-  // 2. Salva em arquivo
+  // 2. Salva em Postgres
+  if (pool) {
+    try {
+      await ensureDb();
+      for (const row of rows) {
+        const { id, ...data } = row;
+        await pool.query(
+          `INSERT INTO product_edits (product_id, data)
+           VALUES ($1, $2::jsonb)
+           ON CONFLICT (product_id) DO UPDATE SET data = EXCLUDED.data`,
+          [id, JSON.stringify(data)],
+        );
+      }
+    } catch (error) {
+      console.warn("Erro ao salvar edits em Postgres:", error);
+    }
+  }
+
+  // 3. Salva em arquivo
   writeQueue = writeQueue
     .then(async () => {
       try {

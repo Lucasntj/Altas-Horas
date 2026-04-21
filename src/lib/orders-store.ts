@@ -1,7 +1,7 @@
 import { kvGet, kvSet } from "./kv-store";
 import { promises as fs } from "node:fs";
 import path from "node:path";
-import { Pool } from "pg";
+import { pool } from "./db";
 
 export interface OrderItem {
   id: string;
@@ -33,20 +33,10 @@ const KV_ORDERS_KEY = "altas-horas:orders";
 const dataFilePath =
   process.env.ORDERS_DATA_FILE ??
   path.join(/*turbopackIgnore: true*/ process.cwd(), ".data", "orders.json");
-const databaseUrl = process.env.DATABASE_URL;
 
 let ordersStoreCache: StoredOrder[] | null = null;
 let writeQueue = Promise.resolve();
 let dbInitialized = false;
-
-const globalPool = globalThis as unknown as { __ordersPool?: Pool };
-const pool = databaseUrl
-  ? (globalPool.__ordersPool ?? new Pool({ connectionString: databaseUrl }))
-  : null;
-
-if (pool && !globalPool.__ordersPool) {
-  globalPool.__ordersPool = pool;
-}
 
 const normalizeStatus = (status: string): OrderStatus => {
   const normalized = String(status).toLowerCase().trim();

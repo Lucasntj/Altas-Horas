@@ -1,5 +1,6 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
+import { pool } from "./db";
 import { kvGet, kvSet } from "./kv-store";
 import {
   DEFAULT_STORE_SETTINGS,
@@ -17,8 +18,20 @@ const storeSettingsFilePath =
     "store-settings.json",
   );
 
+let dbInitialized = false;
 let settingsCache: StoreSettings | null = null;
 let writeQueue = Promise.resolve();
+
+const ensureDb = async () => {
+  if (!pool || dbInitialized) return;
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS store_settings (
+      key TEXT PRIMARY KEY,
+      data JSONB NOT NULL
+    )
+  `);
+  dbInitialized = true;
+};
 
 export const getStoreSettings = async (): Promise<StoreSettings> => {
   if (settingsCache) {
@@ -35,6 +48,24 @@ export const getStoreSettings = async (): Promise<StoreSettings> => {
     }
   } catch (error) {
     console.warn("Erro ao carregar configuracoes da loja de KV:", error);
+  }
+
+  if (pool) {
+    try {
+      await ensureDb();
+      const result = await pool.query<{ data: Partial<StoreSettings> }>(
+        "SELECT data FROM store_settings WHERE key = 'main'",
+      );
+      if (result.rows.length > 0) {
+        settingsCache = normalizeStoreSettings(result.rows[0].data);
+        return settingsCache;
+      }
+    } catch (error) {
+      console.warn(
+        "Erro ao carregar configuracoes da loja de Postgres:",
+        error,
+      );
+    }
   }
 
   try {
@@ -62,6 +93,20 @@ export const updateStoreSettings = async (
     await kvSet(KV_STORE_SETTINGS_KEY, nextSettings);
   } catch (error) {
     console.warn("Erro ao salvar configuracoes da loja em KV:", error);
+  }
+
+  if (pool) {
+    try {
+      await ensureDb();
+      await pool.query(
+        `INSERT INTO store_settings (key, data)
+         VALUES ('main', $1::jsonb)
+         ON CONFLICT (key) DO UPDATE SET data = EXCLUDED.data`,
+        [JSON.stringify(nextSettings)],
+      );
+    } catch (error) {
+      console.warn("Erro ao salvar configuracoes da loja em Postgres:", error);
+    }
   }
 
   writeQueue = writeQueue
